@@ -1,19 +1,32 @@
 #!/usr/bin/env python3
 """ALONEHUNTER FramePack Kaggle dispatcher.
 
-One stable Make/Kaggle control-plane entrypoint. Select workload by AH_FRAMEPACK_MODE
-(default: admission). This prevents scenario proliferation while keeping every
-workload versioned in GitHub.
+One stable Make/Kaggle control-plane entrypoint. Workload selection is encoded in
+Kaggle kernel slug/title so Make does not need executable scenario proliferation.
+Environment variable AH_FRAMEPACK_MODE still overrides it when explicitly set.
 """
 from __future__ import annotations
 import os, subprocess, sys, urllib.request
 from pathlib import Path
 
-MODE=os.environ.get('AH_FRAMEPACK_MODE','admission').strip().lower()
 SCRIPTS={
     'admission':'framepack_probe.py',
     'preflight':'framepack_preflight.py',
 }
+
+def detect_mode() -> str:
+    explicit=os.environ.get('AH_FRAMEPACK_MODE','').strip().lower()
+    if explicit:
+        return explicit
+    # Kaggle exposes kernel metadata through env vars inconsistently; inspect all
+    # harmless textual env values so a slug/title containing '-preflight-' routes
+    # deterministically without another Make scenario.
+    haystack=' '.join(str(v).lower() for v in os.environ.values() if isinstance(v,str))
+    if 'preflight' in haystack:
+        return 'preflight'
+    return 'admission'
+
+MODE=detect_mode()
 if MODE not in SCRIPTS:
     raise SystemExit(f'unsupported AH_FRAMEPACK_MODE={MODE!r}; allowed={sorted(SCRIPTS)}')
 name=SCRIPTS[MODE]
