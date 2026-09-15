@@ -1,0 +1,13 @@
+{
+  "id": "REPLACE_WITH_KAGGLE_USERNAME/alonehunter-framepack-admission",
+  "title": "ALONEHUNTER FramePack Admission",
+  "code_file": "framepack_probe.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": []
+}
