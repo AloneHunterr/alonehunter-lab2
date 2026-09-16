@@ -12,16 +12,16 @@ from pathlib import Path
 SCRIPTS={
     'admission':'framepack_probe.py',
     'preflight':'framepack_preflight.py',
+    'inference':'framepack_inference.py',
 }
 
 def detect_mode() -> str:
     explicit=os.environ.get('AH_FRAMEPACK_MODE','').strip().lower()
     if explicit:
         return explicit
-    # Kaggle exposes kernel metadata through env vars inconsistently; inspect all
-    # harmless textual env values so a slug/title containing '-preflight-' routes
-    # deterministically without another Make scenario.
     haystack=' '.join(str(v).lower() for v in os.environ.values() if isinstance(v,str))
+    if 'inference' in haystack or 'microproof' in haystack:
+        return 'inference'
     if 'preflight' in haystack:
         return 'preflight'
     return 'admission'
