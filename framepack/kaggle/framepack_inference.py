@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
-"""ALONEHUNTER Video Factory — FramePack physical MP4 sanity inference.
-
-Runs the official FramePack demo in its own subprocess after cloning/installing the
-pinned upstream requirements. It deliberately targets a short sanity render first.
-Success is ONLY a physical MP4 plus telemetry and a hash-bound artifact manifest.
+"""ALONEHUNTER Video Factory — FramePack headless physical MP4 microproof.
+Success means a physical MP4 plus telemetry and a hash-bound manifest.
 """
 from __future__ import annotations
 import hashlib,json,os,shutil,subprocess,sys,time
@@ -23,29 +20,53 @@ def sha(p):
  return h.hexdigest()
 def gpu(): return run(['nvidia-smi','--query-gpu=index,name,memory.total,memory.used,memory.free','--format=csv,noheader,nounits'],60)
 def find_mp4():
- xs=sorted(W.rglob('*.mp4'),key=lambda p:p.stat().st_mtime,reverse=True)
+ xs=sorted((R/'outputs').glob('*.mp4'),key=lambda p:p.stat().st_mtime,reverse=True) if (R/'outputs').exists() else []
  return xs[0] if xs else None
 
 def main():
- rec={'schema':'AH_FRAMEPACK_INFERENCE_V1','started':time.time(),'prompt':PROMPT,'gpu_before':gpu(),'disk_before':shutil.disk_usage(W)._asdict(),'steps':{}}
+ rec={'schema':'AH_FRAMEPACK_INFERENCE_V2','adapter':'upstream_worker_direct','started':time.time(),'prompt':PROMPT,'gpu_before':gpu(),'disk_before':shutil.disk_usage(W)._asdict(),'steps':{}}
  if R.exists(): shutil.rmtree(R)
  rec['steps']['clone']=run(['git','clone','--depth','1','https://github.com/lllyasviel/FramePack.git',str(R)],300)
  if rec['steps']['clone']['returncode']!=0: return finish(rec,False,'clone_failed')
  rec['steps']['commit']=run(['git','-C',str(R),'rev-parse','HEAD'],60)
  rec['steps']['install']=run([sys.executable,'-m','pip','install','-r',str(R/'requirements.txt')],1200)
  if rec['steps']['install']['returncode']!=0: return finish(rec,False,'dependency_install_failed')
- # Official CLI surface is discovered from the checked-out commit rather than guessed.
- rec['steps']['help']=run([sys.executable,str(R/'demo_gradio.py'),'--help'],180,cwd=str(R))
- # FramePack upstream is Gradio-first. If a stable CLI is exposed, use it; otherwise
- # emit exact evidence for the next adapter revision instead of fabricating success.
- helptext=(rec['steps']['help']['stdout']+'\n'+rec['steps']['help']['stderr']).lower()
- if '--prompt' not in helptext:
-  return finish(rec,False,'official_upstream_has_no_supported_headless_cli_in_this_commit')
- cmd=[sys.executable,str(R/'demo_gradio.py'),'--prompt',PROMPT,'--output',str(OUT)]
- rec['steps']['inference']=run(cmd,7200,cwd=str(R))
- candidate=OUT if OUT.exists() else find_mp4()
- if not candidate or candidate.stat().st_size<1024: return finish(rec,False,'no_physical_mp4')
- if candidate!=OUT: shutil.copy2(candidate,OUT)
+ # Execute the checked-out upstream module without launching Gradio, then invoke its
+ # own worker() directly. This keeps upstream inference logic authoritative.
+ adapter=R/'ah_headless_adapter.py'
+ adapter.write_text(r'''import os,sys,traceback
+from pathlib import Path
+import numpy as np
+ROOT=Path(__file__).resolve().parent
+os.chdir(ROOT)
+sys.argv=[str(ROOT/'demo_gradio.py')]
+src=(ROOT/'demo_gradio.py').read_text(encoding='utf-8')
+cut=src.rfind('\nblock.launch(')
+if cut < 0: raise RuntimeError('upstream_launch_boundary_not_found')
+src=src[:cut]
+ns={'__name__':'ah_framepack_upstream','__file__':str(ROOT/'demo_gradio.py')}
+exec(compile(src,str(ROOT/'demo_gradio.py'),'exec'),ns,ns)
+# Deterministic synthetic image is sufficient for transport/inference microproof.
+h,w=360,640
+y=np.linspace(0,1,h,dtype=np.float32)[:,None]
+x=np.linspace(0,1,w,dtype=np.float32)[None,:]
+img=np.zeros((h,w,3),dtype=np.uint8)
+img[...,0]=(12+18*y).astype(np.uint8)
+img[...,1]=(18+25*y).astype(np.uint8)
+img[...,2]=(28+45*y+8*x).astype(np.uint8)
+# bright platform/train-light bands
+img[250:255,:,0:3]=110
+img[285:292,:,0:3]=65
+prompt=os.environ.get('AH_VIDEO_PROMPT','cinematic rainy railway platform at night, subtle natural motion, locked camera, realistic light reflections, premium music video')
+ns['worker'](img,prompt,'',31337,1.0,9,4,1.0,10.0,0.0,6.0,True,20)
+print('AH_HEADLESS_WORKER_RETURNED=1')
+''',encoding='utf-8')
+ rec['steps']['adapter']=run([sys.executable,str(adapter)],7200,cwd=str(R))
+ candidate=find_mp4()
+ if not candidate or candidate.stat().st_size<1024:
+  return finish(rec,False,'headless_worker_returned_without_physical_mp4')
+ shutil.copy2(candidate,OUT)
+ rec['source_mp4']=str(candidate)
  return finish(rec,True,None)
 
 def finish(rec,ok,reason):
