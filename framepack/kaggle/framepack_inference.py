@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """ALONEHUNTER Video Factory — FramePack headless physical MP4 microproof.
-V8: NF4 route + quantized recast guards + projection FP16 compute alignment + durable telemetry.
+V9: NF4 route + exact x_embedder projection dtype alignment + durable telemetry.
 """
 from __future__ import annotations
 import hashlib,json,os,shutil,subprocess,sys,time,traceback,urllib.request,threading
 from pathlib import Path
 W=Path('/kaggle/working'); R=W/'FramePack'; OUT=W/'AH_FRAMEPACK_SANITY.mp4'; REC=W/'AH_FRAMEPACK_INFERENCE_RECEIPT.json'; MAN=W/'AH_FRAMEPACK_ARTIFACT_MANIFEST.json'
 PROMPT=os.environ.get('AH_VIDEO_PROMPT','cinematic rainy railway platform at night, subtle natural motion, locked camera, realistic light reflections, premium music video')
-CALLBACK='https://hook.us2.make.com/z9tbdjw64o61sn2xmu5281fi0fmafcto'; SCHEMA='AH_FRAMEPACK_INFERENCE_V8_NF4_FP16_COMPUTE'; HEARTBEAT_S=60
+CALLBACK='https://hook.us2.make.com/z9tbdjw64o61sn2xmu5281fi0fmafcto'; SCHEMA='AH_FRAMEPACK_INFERENCE_V9_XEMBEDDER_DTYPE'; HEARTBEAT_S=60
 
 def callback(payload):
  try:
@@ -43,7 +43,7 @@ def finish(rec,ok,reason):
  if OUT.exists():arts.append({'role':'video','filename':OUT.name,'path':str(OUT),'mime_type':'video/mp4','bytes':OUT.stat().st_size,'sha256':sha(OUT)})
  REC.write_text(json.dumps(rec,ensure_ascii=False,indent=2,default=str),encoding='utf-8'); arts.append({'role':'inference_receipt','filename':REC.name,'path':str(REC),'mime_type':'application/json','bytes':REC.stat().st_size,'sha256':sha(REC)}); manifest={'schema':'AH_FRAMEPACK_ARTIFACT_MANIFEST_V1','artifacts':arts}; MAN.write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf-8'); cb=callback({'event':'AH_FRAMEPACK_TERMINAL','schema':SCHEMA,'receipt':rec,'manifest':manifest}); print('AH_CALLBACK='+json.dumps(cb),flush=True); return 0 if ok else 2
 def main():
- rec={'schema':SCHEMA,'adapter':'upstream_worker_direct_nf4_fp16_compute','started':time.time(),'stage':'startup','prompt':PROMPT,'gpu_before':gpu(),'disk_before':disk(),'steps':{}}; stop=threading.Event(); threading.Thread(target=heartbeat,args=(rec,stop),daemon=True).start(); emit('AH_FRAMEPACK_STARTUP',rec)
+ rec={'schema':SCHEMA,'adapter':'upstream_worker_direct_nf4_xembedder_dtype','started':time.time(),'stage':'startup','prompt':PROMPT,'gpu_before':gpu(),'disk_before':disk(),'steps':{}}; stop=threading.Event(); threading.Thread(target=heartbeat,args=(rec,stop),daemon=True).start(); emit('AH_FRAMEPACK_STARTUP',rec)
  try:
   if R.exists():shutil.rmtree(R)
   if run(['git','clone','--depth','1','https://github.com/lllyasviel/FramePack.git',str(R)],300,rec=rec,stage='clone').get('returncode')!=0:return finish(rec,False,'clone_failed')
@@ -53,6 +53,13 @@ def main():
 from pathlib import Path
 import numpy as np
 ROOT=Path(__file__).resolve().parent; os.chdir(ROOT); sys.argv=[str(ROOT/'demo_gradio.py')]
+# Patch the exact upstream Conv3d boundary proven by V8 terminal traceback.
+model_file=ROOT/'diffusers_helper/models/hunyuan_video_packed.py'
+model_src=model_file.read_text(encoding='utf-8')
+needle='hidden_states = self.gradient_checkpointing_method(self.x_embedder.proj, latents)'
+replacement="hidden_states = self.gradient_checkpointing_method(self.x_embedder.proj, latents.to(dtype=self.x_embedder.proj.bias.dtype))"
+if needle not in model_src: raise RuntimeError('x_embedder_patch_boundary_not_found')
+model_file.write_text(model_src.replace(needle,replacement),encoding='utf-8')
 src=(ROOT/'demo_gradio.py').read_text(encoding='utf-8'); cut=src.rfind('\nblock.launch(')
 if cut<0: raise RuntimeError('upstream_launch_boundary_not_found')
 src=src[:cut]
@@ -60,9 +67,6 @@ src=src.replace('LlamaModel.from_pretrained("hunyuanvideo-community/HunyuanVideo
 src=src.replace("HunyuanVideoTransformer3DModelPacked.from_pretrained('lllyasviel/FramePackI2V_HY', torch_dtype=torch.bfloat16).cpu()", "HunyuanVideoTransformer3DModelPacked.from_pretrained('furusu/framepack_transformer_nf4').cpu()")
 src=src.replace('transformer.to(dtype=torch.bfloat16)', "transformer.to(dtype=torch.bfloat16) if getattr(transformer, 'quantization_method', None) is None else transformer")
 src=src.replace('text_encoder.to(dtype=torch.float16)', "text_encoder.to(dtype=torch.float16) if getattr(text_encoder, 'quantization_method', None) is None else text_encoder")
-# NF4 checkpoints carry FP16 projection biases. Keep sampler tensors FP16 so Conv3d/Linear inputs match their FP16 biases.
-src=src.replace('dtype=torch.bfloat16, device=transformer.device', 'dtype=torch.float16, device=transformer.device')
-src=src.replace('dtype=torch.bfloat16, device=device', 'dtype=torch.float16, device=device')
 ns={'__name__':'ah_framepack_upstream','__file__':str(ROOT/'demo_gradio.py')}; exec(compile(src,str(ROOT/'demo_gradio.py'),'exec'),ns,ns)
 h,w=360,640; y=np.linspace(0,1,h,dtype=np.float32)[:,None]; x=np.linspace(0,1,w,dtype=np.float32)[None,:]; img=np.zeros((h,w,3),dtype=np.uint8); img[...,0]=(12+18*y).astype(np.uint8); img[...,1]=(18+25*y).astype(np.uint8); img[...,2]=(28+45*y+8*x).astype(np.uint8); img[250:255,:,:]=110; img[285:292,:,:]=65
 ns['worker'](img,os.environ.get('AH_VIDEO_PROMPT','cinematic rainy railway platform at night, subtle natural motion, locked camera, realistic light reflections, premium music video'),'',31337,1.0,9,4,1.0,10.0,0.0,6.0,True,20); print('AH_HEADLESS_WORKER_RETURNED=1')
