@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""R020 SHOT001 FramePack production bootstrap with terminal inline MP4 delivery.
-Uses proven V9 runtime and durable Drive ingress. The terminal callback carries base64 MP4
-so QA does not depend on Kaggle output readback.
+"""R020 SHOT001 FramePack production bootstrap with low-data terminal artifact contract.
+Uses proven V9 runtime and durable Drive ingress. Terminal callback carries only manifest-bound
+artifact metadata; MP4 bytes must bypass Make and be delivered by delivery_finalizer.py.
 """
 import subprocess,sys,urllib.request
 from pathlib import Path
@@ -21,12 +21,12 @@ new_prompt="locked camera; begin near-black and reveal the existing scene only t
 if old_prompt not in src: raise RuntimeError('production_prompt_patch_boundary_not_found')
 src=src.replace(old_prompt,new_prompt)
 src=src.replace("OUT=W/'AH_FRAMEPACK_SANITY.mp4'","OUT=W/'AH_R020_SHOT001_FRAMEPACK.mp4'")
-# Inline artifact in terminal callback. This is intentionally a delivery fallback for QA,
-# independent of Kaggle output/status readback endpoints.
-src=src.replace("import hashlib,json,os,shutil,subprocess,sys,time,traceback,urllib.request,threading", "import hashlib,json,os,shutil,subprocess,sys,time,traceback,urllib.request,threading,base64")
+# LOW_DATA_MODE invariant: never put MP4 bytes/base64 through Make.
+# The proven V9 runtime already emits AH_FRAMEPACK_TERMINAL with a manifest containing
+# filename, bytes and sha256 for the physical MP4. delivery_finalizer.py performs the
+# separate direct Kaggle -> Drive transfer using that manifest.
 needle="cb=callback({'event':'AH_FRAMEPACK_TERMINAL','schema':SCHEMA,'receipt':rec,'manifest':manifest}); print('AH_CALLBACK='+json.dumps(cb),flush=True); return 0 if ok else 2"
-replacement="video_inline=None\n if OUT.exists(): video_inline=base64.b64encode(OUT.read_bytes()).decode('ascii')\n cb=callback({'event':'AH_FRAMEPACK_TERMINAL','schema':SCHEMA,'receipt':rec,'manifest':manifest,'video_base64':video_inline,'video_filename':OUT.name if OUT.exists() else None}); print('AH_CALLBACK='+json.dumps(cb),flush=True); return 0 if ok else 2"
-if needle not in src: raise RuntimeError('terminal_delivery_patch_boundary_not_found')
-src=src.replace(needle,replacement)
+if needle not in src: raise RuntimeError('terminal_manifest_boundary_not_found')
+
 TARGET.write_text(src,encoding='utf-8')
 raise SystemExit(subprocess.call([sys.executable,str(TARGET)]))
