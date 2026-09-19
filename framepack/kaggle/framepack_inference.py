@@ -7,7 +7,7 @@ import hashlib,json,os,shutil,subprocess,sys,time,traceback,urllib.request,threa
 from pathlib import Path
 W=Path('/kaggle/working'); R=W/'FramePack'; OUT=W/'AH_FRAMEPACK_SANITY.mp4'; REC=W/'AH_FRAMEPACK_INFERENCE_RECEIPT.json'; MAN=W/'AH_FRAMEPACK_ARTIFACT_MANIFEST.json'
 PROMPT=os.environ.get('AH_VIDEO_PROMPT','cinematic rainy railway platform at night, subtle natural motion, locked camera, realistic light reflections, premium music video')
-CALLBACK='https://hook.us2.make.com/z9tbdjw64o61sn2xmu5281fi0fmafcto'; SCHEMA='AH_FRAMEPACK_INFERENCE_V9_XEMBEDDER_DTYPE'; HEARTBEAT_S=60
+CALLBACK=os.environ.get('AH_FRAMEPACK_RECEIPT_URL','https://hook.us2.make.com/z9tbdjw64o61sn2xmu5281fi0fmafcto'); DRIVE_UPLOAD_URL=os.environ.get('AH_DRIVE_RESUMABLE_URL',''); SCHEMA='AH_FRAMEPACK_INFERENCE_V9_XEMBEDDER_DTYPE'; HEARTBEAT_S=60
 
 def callback(payload):
  try:
@@ -38,10 +38,16 @@ def find_mp4():
  xs=sorted((R/'outputs').glob('*.mp4'),key=lambda p:p.stat().st_mtime,reverse=True) if (R/'outputs').exists() else []; return xs[0] if xs else None
 def heartbeat(rec,stop):
  while not stop.wait(HEARTBEAT_S):emit('AH_FRAMEPACK_HEARTBEAT',rec)
+def direct_drive_upload():
+ if not DRIVE_UPLOAD_URL or not OUT.exists(): return {'attempted':False}
+ data=OUT.read_bytes(); req=urllib.request.Request(DRIVE_UPLOAD_URL,data=data,headers={'Content-Type':'video/mp4','Content-Length':str(len(data))},method='PUT')
+ try:
+  with urllib.request.urlopen(req,timeout=600) as r:return {'attempted':True,'status':r.status,'body':r.read(2000).decode(errors='replace'),'bytes':len(data),'sha256':sha(OUT)}
+ except Exception as e:return {'attempted':True,'error':repr(e),'bytes':len(data),'sha256':sha(OUT)}
 def finish(rec,ok,reason):
  rec.update(pass_=ok,failure_reason=reason,gpu_after=gpu(),disk_after=disk(),finished=time.time(),stage='terminal'); rec['pass']=rec.pop('pass_'); rec['elapsed_s']=round(rec['finished']-rec['started'],3); arts=[]
  if OUT.exists():arts.append({'role':'video','filename':OUT.name,'path':str(OUT),'mime_type':'video/mp4','bytes':OUT.stat().st_size,'sha256':sha(OUT)})
- REC.write_text(json.dumps(rec,ensure_ascii=False,indent=2,default=str),encoding='utf-8'); arts.append({'role':'inference_receipt','filename':REC.name,'path':str(REC),'mime_type':'application/json','bytes':REC.stat().st_size,'sha256':sha(REC)}); manifest={'schema':'AH_FRAMEPACK_ARTIFACT_MANIFEST_V1','artifacts':arts}; MAN.write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf-8'); cb=callback({'event':'AH_FRAMEPACK_TERMINAL','schema':SCHEMA,'receipt':rec,'manifest':manifest}); print('AH_CALLBACK='+json.dumps(cb),flush=True); return 0 if ok else 2
+ REC.write_text(json.dumps(rec,ensure_ascii=False,indent=2,default=str),encoding='utf-8'); arts.append({'role':'inference_receipt','filename':REC.name,'path':str(REC),'mime_type':'application/json','bytes':REC.stat().st_size,'sha256':sha(REC)}); manifest={'schema':'AH_FRAMEPACK_ARTIFACT_MANIFEST_V1','artifacts':arts}; MAN.write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf-8'); upload=direct_drive_upload() if ok else {'attempted':False}; rec['drive_upload']=upload; cb=callback({'event':'AH_FRAMEPACK_TERMINAL','schema':SCHEMA,'receipt':rec,'manifest':manifest,'drive_upload':upload}); print('AH_CALLBACK='+json.dumps(cb),flush=True); return 0 if ok else 2
 def main():
  rec={'schema':SCHEMA,'adapter':'upstream_worker_direct_nf4_xembedder_dtype','started':time.time(),'stage':'startup','prompt':PROMPT,'gpu_before':gpu(),'disk_before':disk(),'steps':{}}; stop=threading.Event(); threading.Thread(target=heartbeat,args=(rec,stop),daemon=True).start(); emit('AH_FRAMEPACK_STARTUP',rec)
  try:
