@@ -1,4 +1,5 @@
 name: execution-control-plane-binding-v1
+# behavioral-harness-revision: 2
 
 on:
   push:
