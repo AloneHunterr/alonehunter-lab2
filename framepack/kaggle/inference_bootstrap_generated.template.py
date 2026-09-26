@@ -15,8 +15,9 @@ def _verifier():
  return ns["require_admission"]
 require_admission=_verifier()
 require_admission(surface="KAGGLE",operation="R020_FRAMEPACK_EXECUTION")
-Path("/kaggle/working").mkdir(parents=True,exist_ok=True)
-Path("/kaggle/working/control_plane_v1.py").write_text(EMBEDDED_VERIFIER)
+WORK=Path(os.environ.get("AH_KAGGLE_WORKING","/kaggle/working"))
+WORK.mkdir(parents=True,exist_ok=True)
+(WORK/"control_plane_v1.py").write_text(EMBEDDED_VERIFIER)
 SOURCE="https://raw.githubusercontent.com/AloneHunterr/alonehunter-lab2/__SOURCE_COMMIT__/framepack/kaggle/framepack_inference.py"
 INGRESS="https://drive.usercontent.google.com/download?id=1CaaeDM1aa5WxaGLRp261fphwjsxdCuw6&export=download&confirm=t"
 TARGET=WORK/"framepack_inference.py"; IMAGE=WORK/"AH_R020_SHOT001_SOURCE.png"
