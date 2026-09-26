@@ -1,1 +1,2 @@
-#!/usr/bin/env python3\n"""RETIRED production entrypoint. Canonical execution is inference_bootstrap_generated.py embedded by Make scenario 6283680."""\nraise RuntimeError("LEGACY_BOOTSTRAP_DISABLED__USE_SELF_CONTAINED_GENERATED_BOOTSTRAP")\n
+#!/usr/bin/env python3
+raise RuntimeError("LEGACY_BOOTSTRAP_DISABLED__USE_SELF_CONTAINED_GENERATED_BOOTSTRAP")
