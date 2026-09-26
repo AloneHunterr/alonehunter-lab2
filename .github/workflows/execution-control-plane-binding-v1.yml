@@ -1,5 +1,5 @@
 name: execution-control-plane-binding-v1
-# behavioral-harness-revision: 2
+# behavioral-harness-revision: 3-fallback-drive-finalizer
 
 on:
   push:
