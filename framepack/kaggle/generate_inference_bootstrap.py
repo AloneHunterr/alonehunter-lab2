@@ -8,3 +8,5 @@ commit=subprocess.check_output(["git","log","-1","--format=%H","--","framepack/k
 if not re.fullmatch(r"[0-9a-f]{40}",commit): raise SystemExit("source commit invalid")
 o=t.replace("__VERIFIER_SHA256__",sha).replace("__VERIFIER_VERSION__",m.group(1)).replace("__SOURCE_COMMIT__",commit).replace("__EMBEDDED_VERIFIER__",repr(v))
 (H/"inference_bootstrap_generated.py").write_text(o); print(sha,m.group(1),commit)
+
+# full-history regeneration trigger
