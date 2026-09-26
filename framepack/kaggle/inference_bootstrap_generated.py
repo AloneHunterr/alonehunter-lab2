@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import hashlib,subprocess,sys,urllib.request
+import hashlib,os,subprocess,sys,urllib.request
 from pathlib import Path
 VERIFIER_SHA256="9669ecca9005b80f57e112063ff85c3310257fcec42329d6c9b78caccc710524"
 VERIFIER_VERSION="EXECUTION_CONTROL_PLANE_V1"
