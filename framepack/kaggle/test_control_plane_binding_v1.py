@@ -151,6 +151,7 @@ class ControlPlaneBindingTest(unittest.TestCase):
     def _run_generated(self, raw=None, path=None):
         target=path or (HERE/"inference_bootstrap_generated.py")
         env=os.environ.copy()
+        env["AH_KAGGLE_WORKING"]="/tmp/ah-kaggle-working-test"
         env.pop("AH_EXECUTION_ADMISSION_TOKEN",None); env.pop("AH_EXECUTION_ADMISSION_TOKEN_KAGGLE",None)
         if raw is not None: env["AH_EXECUTION_ADMISSION_TOKEN_KAGGLE"]=raw
         harness="import runpy,urllib.request;\nclass S(Exception): pass\ndef sent(*a,**k): print('NETWORK_SENTINEL_CALLED'); raise S('NETWORK_SENTINEL')\nurllib.request.urlopen=sent\nrunpy.run_path("+repr(str(target))+",run_name='__main__')"
