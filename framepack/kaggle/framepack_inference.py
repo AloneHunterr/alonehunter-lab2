@@ -5,11 +5,13 @@ V9: NF4 route + exact x_embedder projection dtype alignment + durable telemetry.
 from __future__ import annotations
 import hashlib,json,os,shutil,subprocess,sys,time,traceback,urllib.request,threading
 from pathlib import Path
+from control_plane_v1 import require_admission
 W=Path('/kaggle/working'); R=W/'FramePack'; OUT=W/'AH_FRAMEPACK_SANITY.mp4'; REC=W/'AH_FRAMEPACK_INFERENCE_RECEIPT.json'; MAN=W/'AH_FRAMEPACK_ARTIFACT_MANIFEST.json'
 PROMPT=os.environ.get('AH_VIDEO_PROMPT','cinematic rainy railway platform at night, subtle natural motion, locked camera, realistic light reflections, premium music video')
 CALLBACK=os.environ.get('AH_FRAMEPACK_RECEIPT_URL','https://hook.us2.make.com/z9tbdjw64o61sn2xmu5281fi0fmafcto'); DRIVE_UPLOAD_URL=os.environ.get('AH_DRIVE_RESUMABLE_URL',''); SCHEMA='AH_FRAMEPACK_INFERENCE_V9_XEMBEDDER_DTYPE'; HEARTBEAT_S=60
 
 def callback(payload):
+ require_admission(surface='MAKE', operation='FRAMEPACK_CALLBACK')
  try:
   b=json.dumps(payload,ensure_ascii=False,default=str).encode(); req=urllib.request.Request(CALLBACK,data=b,headers={'Content-Type':'application/json'},method='POST')
   with urllib.request.urlopen(req,timeout=20) as r:return {'status':r.status,'body':r.read(1000).decode(errors='replace')}
@@ -39,6 +41,7 @@ def find_mp4():
 def heartbeat(rec,stop):
  while not stop.wait(HEARTBEAT_S):emit('AH_FRAMEPACK_HEARTBEAT',rec)
 def direct_drive_upload():
+ require_admission(surface='DRIVE', operation='FRAMEPACK_ARTIFACT_DELIVERY')
  if not DRIVE_UPLOAD_URL or not OUT.exists(): return {'attempted':False}
  data=OUT.read_bytes(); req=urllib.request.Request(DRIVE_UPLOAD_URL,data=data,headers={'Content-Type':'video/mp4','Content-Length':str(len(data))},method='PUT')
  try:
