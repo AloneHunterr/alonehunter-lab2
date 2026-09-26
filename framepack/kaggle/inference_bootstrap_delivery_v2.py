@@ -6,11 +6,15 @@ or the separate delivery_finalizer.py fallback.
 """
 import subprocess,sys,urllib.request
 from pathlib import Path
+from control_plane_v1 import require_admission
 
 SOURCE='https://raw.githubusercontent.com/AloneHunterr/alonehunter-lab2/main/framepack/kaggle/framepack_inference.py'
 INGRESS='https://drive.usercontent.google.com/download?id=1CaaeDM1aa5WxaGLRp261fphwjsxdCuw6&export=download&confirm=t'
 TARGET=Path('/kaggle/working/framepack_inference.py')
 IMAGE=Path('/kaggle/working/AH_R020_SHOT001_SOURCE.png')
+
+# Fail closed before any network/provider/runtime side effect.
+require_admission(surface='KAGGLE', operation='R020_FRAMEPACK_EXECUTION')
 
 with urllib.request.urlopen(INGRESS,timeout=120) as r:
     IMAGE.write_bytes(r.read())
