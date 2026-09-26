@@ -25,8 +25,11 @@ def _stable(value: Mapping[str, Any]) -> str:
 def _digest(value: Mapping[str, Any]) -> str:
     return hashlib.sha256(_stable(value).encode("utf-8")).hexdigest()
 
-def parse_token(raw: str | None = None) -> dict[str, Any]:
-    raw = raw if raw is not None else os.environ.get("AH_EXECUTION_ADMISSION_TOKEN", "")
+def parse_token(raw: str | None = None, *, surface: str | None = None) -> dict[str, Any]:
+    if raw is None:
+        scoped = f"AH_EXECUTION_ADMISSION_TOKEN_{surface.upper()}" if surface else ""
+        raw = os.environ.get(scoped, "") if scoped else ""
+        raw = raw or os.environ.get("AH_EXECUTION_ADMISSION_TOKEN", "")
     if not raw:
         raise AdmissionDenied("ADMISSION_TOKEN_REQUIRED")
     try:
@@ -38,7 +41,7 @@ def parse_token(raw: str | None = None) -> dict[str, Any]:
     return token
 
 def require_admission(*, surface: str, operation: str, role: str = ROLE, raw: str | None = None) -> dict[str, Any]:
-    token = parse_token(raw)
+    token = parse_token(raw, surface=surface)
     admission = token["admission"]
     expected_surface = surface.upper()
     if expected_surface not in SURFACES:
