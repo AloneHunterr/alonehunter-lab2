@@ -148,6 +148,59 @@ class ControlPlaneBindingTest(unittest.TestCase):
         # The finalizer has a single network mutation route; every branch reaches it only after module gate.
         self.assertEqual(len(network_lines),1)
 
+    def _run_generated(self, raw=None, path=None):
+        target=path or (HERE/"inference_bootstrap_generated.py")
+        env=os.environ.copy()
+        env.pop("AH_EXECUTION_ADMISSION_TOKEN",None); env.pop("AH_EXECUTION_ADMISSION_TOKEN_KAGGLE",None)
+        if raw is not None: env["AH_EXECUTION_ADMISSION_TOKEN_KAGGLE"]=raw
+        harness="import runpy,urllib.request;\nclass S(Exception): pass\ndef sent(*a,**k): print('NETWORK_SENTINEL_CALLED'); raise S('NETWORK_SENTINEL')\nurllib.request.urlopen=sent\nrunpy.run_path("+repr(str(target))+",run_name='__main__')"
+        return subprocess.run([sys.executable,"-c",harness],env=env,text=True,capture_output=True,timeout=20)
+
+    def test_generated_bootstrap_denials_are_zero_network(self):
+        cases=[(None,"ADMISSION_TOKEN_REQUIRED"),("{bad","ADMISSION_TOKEN_INVALID_JSON")]
+        for surf,op,role,reason in [
+            ("DRIVE","R020_FRAMEPACK_EXECUTION","BIG_TECH_TECH_RND","ADMISSION_SURFACE_MISMATCH"),
+            ("KAGGLE","OTHER","BIG_TECH_TECH_RND","ADMISSION_OPERATION_MISMATCH"),
+            ("KAGGLE","R020_FRAMEPACK_EXECUTION","TECH_VIDEO_FACTORY","ADMISSION_ROLE_MISMATCH")]:
+            t=token(surf,op); t["admission"]["role"]=role
+            stable=json.dumps(dict(sorted(t["admission"].items())),separators=(",",":"),ensure_ascii=False); t["admission_id"]=hashlib.sha256(stable.encode()).hexdigest()
+            cases.append((json.dumps(t),reason))
+        tam=token("KAGGLE","R020_FRAMEPACK_EXECUTION"); tam["admission"]["evidence_digest"]="tampered"; cases.append((json.dumps(tam),"ADMISSION_INTEGRITY_FAILURE"))
+        for raw,reason in cases:
+            p=self._run_generated(raw); out=p.stdout+p.stderr
+            self.assertNotEqual(p.returncode,0); self.assertIn(reason,out); self.assertNotIn("NETWORK_SENTINEL_CALLED",out)
+
+    def test_generated_bootstrap_valid_admission_allows_network_only_after_gate(self):
+        p=self._run_generated(json.dumps(token("KAGGLE","R020_FRAMEPACK_EXECUTION"))); out=p.stdout+p.stderr
+        self.assertNotEqual(p.returncode,0); self.assertIn("NETWORK_SENTINEL_CALLED",out); self.assertIn("NETWORK_SENTINEL",out)
+
+    def test_generated_bootstrap_embedded_integrity_failures_are_zero_network(self):
+        src=(HERE/"inference_bootstrap_generated.py").read_text()
+        variants=[
+            src.replace("Fail-closed Python binding","Tampered Python binding",1),
+            src.replace('VERIFIER_SHA256="','VERIFIER_SHA256="00',1),
+        ]
+        import tempfile
+        for body in variants:
+            with tempfile.NamedTemporaryFile("w",suffix=".py",delete=False) as q:
+                q.write(body); path=q.name
+            try:
+                p=self._run_generated(json.dumps(token("KAGGLE","R020_FRAMEPACK_EXECUTION")),path); out=p.stdout+p.stderr
+                self.assertNotEqual(p.returncode,0); self.assertIn("EMBEDDED_VERIFIER_HASH_MISMATCH",out); self.assertNotIn("NETWORK_SENTINEL_CALLED",out)
+            finally: os.unlink(path)
+
+    def test_generated_artifact_binding_matches_authoritative_verifier(self):
+        import re
+        src=(HERE/"inference_bootstrap_generated.py").read_text(); verifier=(HERE/"control_plane_v1.py").read_text()
+        sha=re.search(r'^VERIFIER_SHA256="([0-9a-f]{64})"',src,re.M).group(1)
+        ver=re.search(r'^VERIFIER_VERSION="([^"]+)"',src,re.M).group(1)
+        commit=re.search(r'^SOURCE_COMMIT="([0-9a-f]{40})"',src,re.M).group(1)
+        self.assertEqual(sha,hashlib.sha256(verifier.encode()).hexdigest())
+        self.assertEqual(ver,CONTROL_PLANE_VERSION); self.assertRegex(commit,r"^[0-9a-f]{40}$")
+        tree=ast.parse(src); calls=[n.lineno for n in ast.walk(tree) if isinstance(n,ast.Call) and isinstance(n.func,ast.Attribute) and n.func.attr=="urlopen"]
+        gates=[n.lineno for n in ast.walk(tree) if isinstance(n,ast.Call) and isinstance(n.func,ast.Name) and n.func.id=="require_admission"]
+        self.assertTrue(calls and gates); self.assertLess(min(gates),min(calls))
+
     def test_replay_not_claimed_by_canonical_v1(self):
         # Canonical requireAdmissionToken V1 has integrity/scope checks only.
         # Replay/freshness is therefore NOT an implemented acceptance property.
