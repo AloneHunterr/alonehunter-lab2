@@ -13,10 +13,15 @@ import os
 import urllib.error
 import urllib.request
 from pathlib import Path
+from control_plane_v1 import require_admission
 
 MANIFEST_NAME = "AH_FRAMEPACK_ARTIFACT_MANIFEST.json"
 ROLE = os.environ.get("AH_ARTIFACT_ROLE", "admission_receipt")
 UPLOAD_URL = os.environ["AH_DRIVE_UPLOAD_URL"]
+
+# Fail closed at the fallback delivery boundary before any Drive/network mutation.
+# Production executors consume canonical admission; they never mint it.
+require_admission(surface="DRIVE", operation="FRAMEPACK_ARTIFACT_DELIVERY")
 
 
 def sha256_file(path: Path) -> str:
