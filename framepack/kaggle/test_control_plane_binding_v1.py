@@ -86,6 +86,68 @@ class ControlPlaneBindingTest(unittest.TestCase):
                     offenders.append((getattr(n,"lineno",0),getattr(p,"name","<module>")))
         self.assertEqual(offenders,[])
 
+    def _run_delivery_finalizer(self, raw=None):
+        env=os.environ.copy()
+        env["AH_DRIVE_UPLOAD_URL"]="https://example.invalid/upload"
+        env.pop("AH_EXECUTION_ADMISSION_TOKEN",None)
+        env.pop("AH_EXECUTION_ADMISSION_TOKEN_DRIVE",None)
+        if raw is not None:
+            env["AH_EXECUTION_ADMISSION_TOKEN_DRIVE"]=raw
+        return subprocess.run([sys.executable,str(HERE/"delivery_finalizer.py")],env=env,text=True,capture_output=True,timeout=20)
+
+    def test_delivery_finalizer_missing_admission_denied_before_network_or_manifest(self):
+        p=self._run_delivery_finalizer()
+        self.assertNotEqual(p.returncode,0)
+        combined=p.stdout+p.stderr
+        self.assertIn("ADMISSION_TOKEN_REQUIRED",combined)
+        self.assertNotIn("manifest not mounted",combined)
+
+    def test_delivery_finalizer_invalid_tampered_and_wrong_scope_denied(self):
+        cases=[
+            ("{bad","ADMISSION_TOKEN_INVALID_JSON"),
+            (json.dumps(token("KAGGLE","FRAMEPACK_ARTIFACT_DELIVERY")),"ADMISSION_SURFACE_MISMATCH"),
+            (json.dumps(token("DRIVE","OTHER")),"ADMISSION_OPERATION_MISMATCH"),
+        ]
+        wrong_role=token("DRIVE","FRAMEPACK_ARTIFACT_DELIVERY")
+        wrong_role["admission"]["role"]="TECH_VIDEO_FACTORY"
+        stable=json.dumps(dict(sorted(wrong_role["admission"].items())),separators=(",",":"),ensure_ascii=False)
+        wrong_role["admission_id"]=hashlib.sha256(stable.encode()).hexdigest()
+        cases.append((json.dumps(wrong_role),"ADMISSION_ROLE_MISMATCH"))
+        tampered=token("DRIVE","FRAMEPACK_ARTIFACT_DELIVERY")
+        tampered["admission"]["evidence_digest"]="tampered"
+        cases.append((json.dumps(tampered),"ADMISSION_INTEGRITY_FAILURE"))
+        for raw,reason in cases:
+            with self.subTest(reason=reason):
+                p=self._run_delivery_finalizer(raw)
+                self.assertNotEqual(p.returncode,0)
+                combined=p.stdout+p.stderr
+                self.assertIn(reason,combined)
+                self.assertNotIn("manifest not mounted",combined)
+
+    def test_delivery_finalizer_valid_scope_passes_gate_then_stops_at_local_preflight(self):
+        p=self._run_delivery_finalizer(json.dumps(token("DRIVE","FRAMEPACK_ARTIFACT_DELIVERY")))
+        self.assertNotEqual(p.returncode,0)
+        combined=p.stdout+p.stderr
+        self.assertIn("manifest not mounted",combined)
+        self.assertNotIn("ADMISSION_",combined)
+
+    def test_delivery_finalizer_all_network_calls_are_after_module_gate(self):
+        tree=ast.parse((HERE/"delivery_finalizer.py").read_text())
+        gate_lines=[]
+        network_lines=[]
+        for n in ast.walk(tree):
+            if isinstance(n,ast.Call):
+                if isinstance(n.func,ast.Name) and n.func.id=="require_admission":
+                    gate_lines.append(n.lineno)
+                if isinstance(n.func,ast.Attribute) and n.func.attr in {"urlopen","post","put","request"}:
+                    network_lines.append(n.lineno)
+        self.assertTrue(gate_lines)
+        self.assertTrue(network_lines)
+        self.assertLess(min(gate_lines),min(network_lines))
+        self.assertEqual(len(gate_lines),1)
+        # The finalizer has a single network mutation route; every branch reaches it only after module gate.
+        self.assertEqual(len(network_lines),1)
+
     def test_replay_not_claimed_by_canonical_v1(self):
         # Canonical requireAdmissionToken V1 has integrity/scope checks only.
         # Replay/freshness is therefore NOT an implemented acceptance property.
