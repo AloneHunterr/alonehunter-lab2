@@ -19,7 +19,7 @@ Path("/kaggle/working").mkdir(parents=True,exist_ok=True)
 Path("/kaggle/working/control_plane_v1.py").write_text(EMBEDDED_VERIFIER)
 SOURCE="https://raw.githubusercontent.com/AloneHunterr/alonehunter-lab2/__SOURCE_COMMIT__/framepack/kaggle/framepack_inference.py"
 INGRESS="https://drive.usercontent.google.com/download?id=1CaaeDM1aa5WxaGLRp261fphwjsxdCuw6&export=download&confirm=t"
-TARGET=Path("/kaggle/working/framepack_inference.py"); IMAGE=Path("/kaggle/working/AH_R020_SHOT001_SOURCE.png")
+TARGET=WORK/"framepack_inference.py"; IMAGE=WORK/"AH_R020_SHOT001_SOURCE.png"
 with urllib.request.urlopen(INGRESS,timeout=120) as r: IMAGE.write_bytes(r.read())
 if IMAGE.stat().st_size!=897933: raise RuntimeError("canonical_source_size_mismatch")
 with urllib.request.urlopen(SOURCE,timeout=30) as r: src=r.read().decode()
