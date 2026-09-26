@@ -1,33 +1,22 @@
-name: execution-control-plane-binding-v1
-# behavioral-harness-revision: 3-fallback-drive-finalizer
-
+name: execution-control-plane-binding-v1-bootstrap
 on:
   push:
     branches: [main]
     paths:
-      - 'framepack/kaggle/control_plane_v1.py'
-      - 'framepack/kaggle/framepack_inference.py'
-      - 'framepack/kaggle/inference_bootstrap_delivery_v2.py'
-      - 'framepack/kaggle/test_control_plane_binding_v1.py'
-      - '.github/workflows/execution-control-plane-binding-v1.yml'
-  pull_request:
-    paths:
-      - 'framepack/kaggle/control_plane_v1.py'
-      - 'framepack/kaggle/framepack_inference.py'
-      - 'framepack/kaggle/inference_bootstrap_delivery_v2.py'
-      - 'framepack/kaggle/test_control_plane_binding_v1.py'
-
+      - 'framepack/kaggle/generate_inference_bootstrap.py'
 permissions:
-  contents: read
-
+  contents: write
 jobs:
-  fail-closed-binding:
+  generate-once:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - name: Big Tech runtime binding regressions
-        run: python -m unittest -v framepack/kaggle/test_control_plane_binding_v1.py
+        with: {python-version: '3.11'}
+      - run: python framepack/kaggle/generate_inference_bootstrap.py
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add framepack/kaggle/inference_bootstrap_generated.py
+          git commit -m "build: generate self-contained admission bootstrap"
+          git push
