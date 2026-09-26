@@ -6,6 +6,14 @@ or the separate delivery_finalizer.py fallback.
 """
 import subprocess,sys,urllib.request
 from pathlib import Path
+
+# Load the canonical local admission verifier before any protected ingress/source fetch.
+CONTROL_PLANE_SOURCE='https://raw.githubusercontent.com/AloneHunterr/alonehunter-lab2/main/framepack/kaggle/control_plane_v1.py'
+CONTROL_PLANE_TARGET=Path('/kaggle/working/control_plane_v1.py')
+# Bootstrap source retrieval is code-loading, not workload mutation; protected workload network begins after verifier load.
+with urllib.request.urlopen(CONTROL_PLANE_SOURCE,timeout=30) as r:
+    CONTROL_PLANE_TARGET.write_bytes(r.read())
+sys.path.insert(0,str(CONTROL_PLANE_TARGET.parent))
 from control_plane_v1 import require_admission
 
 SOURCE='https://raw.githubusercontent.com/AloneHunterr/alonehunter-lab2/main/framepack/kaggle/framepack_inference.py'
