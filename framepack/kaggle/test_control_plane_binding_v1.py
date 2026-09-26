@@ -214,15 +214,21 @@ class ControlPlaneBindingTest(unittest.TestCase):
         with self.assertRaisesRegex(AdmissionDenied,"ADMISSION_OPERATION_MISMATCH"):
             require_admission(surface="KAGGLE",operation="R020_FRAMEPACK_EXECUTION",raw=json.dumps(t))
 
-    def test_real_r020_bootstrap_cannot_reach_ingress_without_token(self):
-        env=os.environ.copy()
-        env.pop("AH_EXECUTION_ADMISSION_TOKEN",None)
-        env.pop("AH_EXECUTION_ADMISSION_TOKEN_KAGGLE",None)
-        p=subprocess.run([sys.executable,str(HERE/"inference_bootstrap_delivery_v2.py")],env=env,text=True,capture_output=True,timeout=20)
-        self.assertNotEqual(p.returncode,0)
-        combined=p.stdout+p.stderr
-        self.assertIn("ADMISSION_TOKEN_REQUIRED",combined)
-        self.assertNotIn("canonical_source_size_mismatch",combined)
+    def test_legacy_bootstraps_are_retired_fail_closed(self):
+        for name in ["inference_bootstrap.py","inference_bootstrap_delivery_v2.py"]:
+            p=subprocess.run([sys.executable,str(HERE/name)],text=True,capture_output=True,timeout=20)
+            out=p.stdout+p.stderr
+            self.assertNotEqual(p.returncode,0); self.assertIn("LEGACY_BOOTSTRAP_DISABLED",out)
+            self.assertNotIn("urlopen", (HERE/name).read_text())
+
+    def test_malformed_generated_artifact_fails_before_network(self):
+        import tempfile
+        with tempfile.NamedTemporaryFile("w",suffix=".py",delete=False) as q:
+            q.write("this is not valid python !!!"); path=q.name
+        try:
+            p=self._run_generated(json.dumps(token("KAGGLE","R020_FRAMEPACK_EXECUTION")),path)
+            self.assertNotEqual(p.returncode,0); self.assertNotIn("NETWORK_SENTINEL_CALLED",p.stdout+p.stderr)
+        finally: os.unlink(path)
 
 if __name__=="__main__":
     unittest.main()
