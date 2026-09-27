@@ -1,0 +1,14 @@
+name: APEX A1-A2 deterministic eval
+on:
+  push:
+    branches: [apex-stabilization-a1-a3-20260927]
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest -v tests/test_audio_apex_runner.py
