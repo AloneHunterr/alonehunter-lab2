@@ -77,3 +77,50 @@ def reconcile_stage(receipts:list,config:dict)->str:
     for stage in STAGES:
         if stage not in done:return stage
     return "COMPLETE"
+
+
+# E104-E109 stabilization: transport/status admission. Pure gate; no provider mutation.
+FORBIDDEN_PCM_TRANSPORTS=("signed_url","temporary_url","presigned_url","ephemeral_url")
+TERMINAL_CLASSES=("REQUEST_ACCEPTED","PROVIDER_STARTED","TERMINAL_FAIL","TERMINAL_TOP3_VERIFIED")
+
+def validate_transport_manifest(task_id:str, pcm:list, lyrics:dict, manifest:dict)->dict:
+    _require(manifest.get("task_id")==task_id,"transport_task_mismatch")
+    _require(manifest.get("transport_kind")=="kaggle_task_path","durable_kaggle_transport_required")
+    _require(bool(manifest.get("kaggle_task_path")),"kaggle_task_path_required")
+    _require(manifest.get("transport_kind") not in FORBIDDEN_PCM_TRANSPORTS,"ephemeral_pcm_transport_forbidden")
+    _require(not manifest.get("signed_urls"),"signed_pcm_urls_forbidden")
+    _require(lyrics.get("authority_id") and _hex64(lyrics.get("sha256")),"lyrics_authority_hash_required")
+    _require(manifest.get("lyrics_sha256")==lyrics["sha256"],"transport_lyrics_mismatch")
+    ordered=manifest.get("ordered_pcm")
+    _require(isinstance(ordered,list) and len(ordered)==len(pcm),"transport_pcm_count_mismatch")
+    for expected, observed in zip(pcm,ordered):
+        for k in ("candidate_id","sha256","bytes"):
+            _require(observed.get(k)==expected.get(k),f"transport_pcm_{k}_mismatch")
+        _require(_hex64(observed.get("sha256")) and int(observed.get("bytes",0))>0,"transport_pcm_identity_required")
+        probe=observed.get("compute_access_probe") or {}
+        _require(probe.get("readable") is True,"compute_access_probe_required")
+        _require(probe.get("observed_sha256")==expected.get("sha256"),"compute_probe_sha_mismatch")
+        _require(int(probe.get("observed_bytes",0))==int(expected.get("bytes",0)),"compute_probe_bytes_mismatch")
+        _require(bool(probe.get("compute_context")),"compute_context_required")
+    return manifest
+
+def classify_terminal_receipt(receipt:dict)->str:
+    state=receipt.get("state")
+    _require(state in TERMINAL_CLASSES,"unknown_result_class")
+    if state=="TERMINAL_TOP3_VERIFIED":
+        top3=receipt.get("top3")
+        _require(isinstance(top3,list) and len(top3)==3,"verified_top3_required")
+        _require(receipt.get("terminal_readback") is True,"terminal_readback_required")
+    else:
+        _require(not receipt.get("top3"),"top3_forbidden_without_terminal_verification")
+    return state
+
+def reconcile_possible_submit(checkpoint:dict, provider_receipts:list)->dict:
+    """Preserve provider identity through timeout/UNKNOWN; never authorize blind resubmit."""
+    pid=checkpoint.get("provider_job_id")
+    _require(bool(pid),"provider_job_identity_required")
+    same=[r for r in provider_receipts if r.get("provider_job_id")==pid]
+    if not same:return {"decision":"PRESERVE_UNKNOWN__READBACK_REQUIRED","provider_job_id":pid}
+    terminal=[r for r in same if r.get("state") in ("TERMINAL_FAIL","TERMINAL_TOP3_VERIFIED")]
+    if terminal:return {"decision":"TERMINAL_RECONCILED","provider_job_id":pid,"state":classify_terminal_receipt(terminal[-1])}
+    return {"decision":"PRESERVE_EXISTING_JOB__NO_RESUBMIT","provider_job_id":pid}
