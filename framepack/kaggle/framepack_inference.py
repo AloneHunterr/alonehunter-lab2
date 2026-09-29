@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ALONEHUNTER Video Factory — FramePack headless physical MP4 microproof.
+"""ALONEHUNTER Video Factory - FramePack headless physical MP4 microproof.
 V9: NF4 route + exact x_embedder projection dtype alignment + durable telemetry.
 """
 from __future__ import annotations
@@ -69,7 +69,8 @@ needle='hidden_states = self.gradient_checkpointing_method(self.x_embedder.proj,
 replacement="hidden_states = self.gradient_checkpointing_method(self.x_embedder.proj, latents.to(dtype=self.x_embedder.proj.bias.dtype))"
 if needle not in model_src: raise RuntimeError('x_embedder_patch_boundary_not_found')
 model_file.write_text(model_src.replace(needle,replacement),encoding='utf-8')
-src=(ROOT/'demo_gradio.py').read_text(encoding='utf-8'); cut=src.rfind('\nblock.launch(')
+src=(ROOT/'demo_gradio.py').read_text(encoding='utf-8'); cut=src.rfind('
+block.launch(')
 if cut<0: raise RuntimeError('upstream_launch_boundary_not_found')
 src=src[:cut]
 src=src.replace('LlamaModel.from_pretrained("hunyuanvideo-community/HunyuanVideo", subfolder=\'text_encoder\', torch_dtype=torch.float16).cpu()', 'LlamaModel.from_pretrained("furusu/hv_llama_nf4").cpu()')
@@ -77,7 +78,17 @@ src=src.replace("HunyuanVideoTransformer3DModelPacked.from_pretrained('lllyasvie
 src=src.replace('transformer.to(dtype=torch.bfloat16)', "transformer.to(dtype=torch.bfloat16) if getattr(transformer, 'quantization_method', None) is None else transformer")
 src=src.replace('text_encoder.to(dtype=torch.float16)', "text_encoder.to(dtype=torch.float16) if getattr(text_encoder, 'quantization_method', None) is None else text_encoder")
 ns={'__name__':'ah_framepack_upstream','__file__':str(ROOT/'demo_gradio.py')}; exec(compile(src,str(ROOT/'demo_gradio.py'),'exec'),ns,ns)
-h,w=360,640; y=np.linspace(0,1,h,dtype=np.float32)[:,None]; x=np.linspace(0,1,w,dtype=np.float32)[None,:]; img=np.zeros((h,w,3),dtype=np.uint8); img[...,0]=(12+18*y).astype(np.uint8); img[...,1]=(18+25*y).astype(np.uint8); img[...,2]=(28+45*y+8*x).astype(np.uint8); img[250:255,:,:]=110; img[285:292,:,:]=65
+source_path=Path(os.environ.get('AH_VIDEO_SOURCE_PATH',''))
+if not source_path.is_file(): raise RuntimeError('video_source_path_missing')
+expected_bytes=int(os.environ.get('AH_VIDEO_SOURCE_BYTES','0') or 0)
+if expected_bytes and source_path.stat().st_size != expected_bytes: raise RuntimeError('video_source_bytes_mismatch')
+expected_sha=os.environ.get('AH_VIDEO_SOURCE_SHA256','').lower()
+if expected_sha:
+ import hashlib
+ actual_sha=hashlib.sha256(source_path.read_bytes()).hexdigest()
+ if actual_sha != expected_sha: raise RuntimeError('video_source_sha256_mismatch')
+from PIL import Image
+img=np.asarray(Image.open(source_path).convert('RGB'))
 ns['worker'](img,os.environ.get('AH_VIDEO_PROMPT','cinematic rainy railway platform at night, subtle natural motion, locked camera, realistic light reflections, premium music video'),'',31337,1.0,9,4,1.0,10.0,0.0,6.0,True,20); print('AH_HEADLESS_WORKER_RETURNED=1')
 ''',encoding='utf-8')
   a=run([sys.executable,str(adapter)],7200,cwd=str(R),rec=rec,stage='adapter')
@@ -89,3 +100,5 @@ ns['worker'](img,os.environ.get('AH_VIDEO_PROMPT','cinematic rainy railway platf
  except BaseException as e:rec['exception']={'type':type(e).__name__,'message':str(e),'traceback':traceback.format_exc()[-30000:]}; return finish(rec,False,'unhandled_'+type(e).__name__)
  finally:stop.set()
 if __name__=='__main__':raise SystemExit(main())
+
+
