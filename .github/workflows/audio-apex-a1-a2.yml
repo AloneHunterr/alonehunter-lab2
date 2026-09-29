@@ -2,6 +2,8 @@ name: APEX A1-A2 deterministic eval
 on:
   push:
     branches: [apex-stabilization-a1-a3-20260927, bigtech-e104-e109-stabilization-20260929]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 jobs:
   test:
