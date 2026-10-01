@@ -12,5 +12,5 @@ with urllib.request.urlopen(f'https://drive.usercontent.google.com/download?id={
 if src.stat().st_size!=SOURCE_BYTES: raise RuntimeError('source_bytes_mismatch')
 h=hashlib.sha256(src.read_bytes()).hexdigest()
 if h!=SOURCE_SHA256: raise RuntimeError('source_sha256_mismatch')
-os.environ.update(AH_VIDEO_TASK_ID=TASK,AH_VIDEO_SOURCE_ID=SOURCE_ID,AH_VIDEO_SOURCE_SHA256=h,AH_VIDEO_SOURCE_PATH=str(src),AH_VIDEO_PROMPT=PROMPT,AH_VIDEO_OUTPUT='AH_R020_SHOT003_FRAMEPACK.mp4')
+os.environ.update(AH_VIDEO_TASK_ID=TASK,AH_VIDEO_SOURCE_ID=SOURCE_ID,AH_VIDEO_SOURCE_SHA256=h,AH_VIDEO_SOURCE_PATH=str(src),AH_VIDEO_PROMPT=PROMPT,AH_VIDEO_OUTPUT='AH_R020_SHOT003_FRAMEPACK.mp4',AH_FRAMEPACK_RECEIPT_URL='https://hook.us2.make.com/z9tbdjw64o61sn2xmu5281fi0fmafcto')
 raise SystemExit(subprocess.call([sys.executable,'framepack/kaggle/framepack_inference.py']))
