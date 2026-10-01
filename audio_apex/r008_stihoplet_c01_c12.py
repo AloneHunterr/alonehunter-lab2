@@ -9,17 +9,16 @@ def pct(v):
  n=len(v);return [((sum(x<q for x in v)+(sum(x==q for x in v)-1)/2)/(n-1)) for q in v]
 out={"task_id":TASK,"state":"STARTED","human_heard":False,"owner_preference_used":False}
 print("AH_R008_RUNNER_START",flush=True)
+P=[['1SndR3DouiAEsnuSyLh6gFvul1fkTLi1t',15563286,'211656ae423436e1d3bce0cbaae10c3b19684795161fb55378d7e1a441043274'],['1T-4aVeQhx4bp8EszRIOBYJg5RAqHt6bh',15567378,'d7653b221bc0a3b1c71655ba23ec6540fa3d376168a8bfba171f865f2e514b1c'],['1DCPNh0z0QDT2qB4D-IGIGqR2vGRATSQt',15192528,'40155bbe7939511c7ff3aabcde2668ee674884efe226af389d99e13341e300ef'],['1BEcG3XWe8QZS03I6OTSHhnvXNF1w6uux',16758078,'b2a1a48c84590c4bf0d769b290eb120d8f53289fe9347057aedc29dfc3eb715a'],['1yuvCoN09wTI6tGYqvG1ZDC_dqnAWtG2B',16515528,'45e5698c3cd581e2f21a3573f944a940d0605d7fb0f2e4cc276fbf7359a45165'],['1ghO9L5s4a266DjhmtCuhyis2Y7Jo8gAg',16383228,'9bdf6fef1812231d2196fa7f2041c36c222408684f353eb73943ef59a71d8b29'],['1eo8o4rcC-nGxICQ1OXfQIAIfhEz8UUlu',16206828,'c4b72807c445596a2007110a29a3712575f92e9754b9185da6d23bcd114099fa'],['1bfcu3MOkvA-XeEv4VLXE4nS3_3sAxqdo',16868328,'4280505e6f6151c8ed9a68234ad9b906f30ab1152b5e43b9a06b1cf918e376d9'],['12K-4_jMmh-A3YKThLhV1vNuTNyinOXyv',16383228,'d40245ba44ab3928b610ce5291163085c9ad9c341cb757f5ba287d03308d5603'],['13Cqyt2fwuoTTq3TfQglQ4c5u23t1VkTG',16052478,'3c56261b98d891bb248ead4c0a71e499e58f5f93d3faa02fed707147b917aaea'],['1oTBhNCOLSrjgLilLFxXGvqojg90E_VpR',15677628,'3c7576bd811a16db8e2ba32b26482a57ef8a07123e87f15739a56943bf308019'],['1SUvPzP3qfAN_24Ug2wg8gLeBDlnnm2IZ',17244942,'2e298409dd5d029432fd501a68996dd79357fbcd410b1aabc6d25b4e85f93b55']]
 try:
- src="/kaggle/working/source.bin"
- print("AH_R008_SOURCE_DOWNLOAD_START",flush=True)
- SOURCE_URL=os.environ.get("AH_R008_SOURCE_URL","").strip()
- if not SOURCE_URL: raise RuntimeError("SOURCE_URL_REQUIRED")
- urllib.request.urlretrieve(SOURCE_URL,src)
- if not os.path.exists(src) or os.path.getsize(src)!=203515870: raise RuntimeError(f"SOURCE_BYTES_FAIL:{os.path.getsize(src) if os.path.exists(src) else -1}")
  W={}
- for i,(a,b) in enumerate(BOUNDARIES,1):
-  p=f"/kaggle/working/C{i:02d}.wav"; subprocess.check_call(["ffmpeg","-y","-ss",str(a),"-to",str(b),"-i",src,"-vn","-acodec","pcm_s16le",p],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL); W[i]=p
- out["split_manifest"]={"state":"PASS_BOUNDARY12","rows":[{"candidate":i,"bytes":os.path.getsize(W[i]),"sha256":hashlib.sha256(open(W[i],"rb").read()).hexdigest()} for i in W]}
+ for i,(fid,sz,h) in enumerate(P,1):
+  p=f"/kaggle/working/C{i:02d}.wav"
+  urllib.request.urlretrieve(f"https://drive.usercontent.google.com/download?id={fid}&export=download&confirm=t",p)
+  got=hashlib.sha256(open(p,"rb").read()).hexdigest()
+  if os.path.getsize(p)!=sz or got!=h: raise RuntimeError(f"PCM_IDENTITY_FAIL_C{i:02d}:{os.path.getsize(p)}:{got}")
+  W[i]=p
+ out["split_manifest"]={"state":"PASS_EXACT_PCM12","rows":[{"candidate":i,"bytes":os.path.getsize(W[i]),"sha256":hashlib.sha256(open(W[i],"rb").read()).hexdigest()} for i in W]}
  if os.environ.get("APEX_ENV")!="1":
   subprocess.check_call([sys.executable,"-m","pip","uninstall","-y","torchvision"])
   subprocess.check_call([sys.executable,"-m","pip","-q","install","--force-reinstall","numpy==1.26.4","scipy==1.15.3","soundfile==0.13.1","transformers==4.47.1","stable-ts"])
