@@ -12,9 +12,7 @@ print("AH_R008_RUNNER_START",flush=True)
 try:
  src="/kaggle/working/source.bin"
  print("AH_R008_SOURCE_DOWNLOAD_START",flush=True)
- subprocess.check_call([sys.executable,"-m","pip","-q","install","gdown"])
- import gdown
- gdown.download(id=SOURCE,output=src,quiet=False)
+ urllib.request.urlretrieve("https://sdmntprdenmarkeast.oaiusercontent.com/files/00000000-16a4-8210-9e0c-12775e4595c1/raw?se=2026-10-01T17%3A36%3A32Z&sp=r&sv=2026-02-06&sr=b&scid=64ae03e7-c434-5c57-9ebe-d91177cd085e&skoid=76024c37-11e2-4c92-aa07-7e519fbe2d0f&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-10-01T16%3A54%3A49Z&ske=2026-10-02T16%3A54%3A49Z&sks=b&skv=2026-02-06&sig=n38xrIbj1exMYXPjrSW1OUeMQpdrcjN6Y%2B/yb2O75oY%3D",src)
  if not os.path.exists(src) or os.path.getsize(src)!=203515870: raise RuntimeError(f"SOURCE_BYTES_FAIL:{os.path.getsize(src) if os.path.exists(src) else -1}")
  W={}
  for i,(a,b) in enumerate(BOUNDARIES,1):
