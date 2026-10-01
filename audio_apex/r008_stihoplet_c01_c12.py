@@ -9,7 +9,12 @@ def pct(v):
  n=len(v);return [((sum(x<q for x in v)+(sum(x==q for x in v)-1)/2)/(n-1)) for q in v]
 out={"task_id":TASK,"state":"STARTED","human_heard":False,"owner_preference_used":False}\nprint("AH_R008_RUNNER_START",flush=True)
 try:
- src="/kaggle/working/source.bin"\n print("AH_R008_SOURCE_DOWNLOAD_START",flush=True)\n subprocess.check_call([sys.executable,"-m","pip","-q","install","gdown"])\n import gdown\n gdown.download(id=SOURCE,output=src,quiet=False)\n if not os.path.exists(src) or os.path.getsize(src)!=203515870: raise RuntimeError(f"SOURCE_BYTES_FAIL:{os.path.getsize(src) if os.path.exists(src) else -1}")
+ src="/kaggle/working/source.bin"
+ print("AH_R008_SOURCE_DOWNLOAD_START",flush=True)
+ subprocess.check_call([sys.executable,"-m","pip","-q","install","gdown"])
+ import gdown
+ gdown.download(id=SOURCE,output=src,quiet=False)
+ if not os.path.exists(src) or os.path.getsize(src)!=203515870: raise RuntimeError(f"SOURCE_BYTES_FAIL:{os.path.getsize(src) if os.path.exists(src) else -1}")
  W={}
  for i,(a,b) in enumerate(BOUNDARIES,1):
   p=f"/kaggle/working/C{i:02d}.wav"; subprocess.check_call(["ffmpeg","-y","-ss",str(a),"-to",str(b),"-i",src,"-vn","-acodec","pcm_s16le",p],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL); W[i]=p
