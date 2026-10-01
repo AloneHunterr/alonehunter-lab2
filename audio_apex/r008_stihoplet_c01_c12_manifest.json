@@ -1,0 +1,21 @@
+{
+  "task_id": "AH_YA_RUSSKIY_STIHOPLET_C01_C12_AUDIO_INTELLIGENCE_APEX_20260927",
+  "source": {"drive_id":"15CmWqvNmVQ6CmkAtH_MMXAOKBWqqE6C6","bytes":203515870,"sha256":"48bdf05f27b4146e33c3a5c07e7aaee8a538a5df05a4e518a9874f3e4beac3b4"},
+  "state":"PASS_EXACT_BOUNDARY12_LOCAL_EXTRACTION",
+  "rows":[
+    {"candidate":"C01","start":0.0,"end":176.5,"duration":176.453605,"bytes":15563286,"sha256":"211656ae423436e1d3bce0cbaae10c3b19684795161fb55378d7e1a441043274"},
+    {"candidate":"C02","start":176.5,"end":353.0,"duration":176.5,"bytes":15567378,"sha256":"d7653b221bc0a3b1c71655ba23ec6540fa3d376168a8bfba171f865f2e514b1c"},
+    {"candidate":"C03","start":353.0,"end":525.25,"duration":172.25,"bytes":15192528,"sha256":"40155bbe7939511c7ff3aabcde2668ee674884efe226af389d99e13341e300ef"},
+    {"candidate":"C04","start":525.25,"end":715.25,"duration":190.0,"bytes":16758078,"sha256":"b2a1a48c84590c4bf0d769b290eb120d8f53289fe9347057aedc29dfc3eb715a"},
+    {"candidate":"C05","start":715.25,"end":902.5,"duration":187.25,"bytes":16515528,"sha256":"45e5698c3cd581e2f21a3573f944a940d0605d7fb0f2e4cc276fbf7359a45165"},
+    {"candidate":"C06","start":902.5,"end":1088.25,"duration":185.75,"bytes":16383228,"sha256":"9bdf6fef1812231d2196fa7f2041c36c222408684f353eb73943ef59a71d8b29"},
+    {"candidate":"C07","start":1088.25,"end":1272.0,"duration":183.75,"bytes":16206828,"sha256":"c4b72807c445596a2007110a29a3712575f92e9754b9185da6d23bcd114099fa"},
+    {"candidate":"C08","start":1272.0,"end":1463.25,"duration":191.25,"bytes":16868328,"sha256":"4280505e6f6151c8ed9a68234ad9b906f30ab1152b5e43b9a06b1cf918e376d9"},
+    {"candidate":"C09","start":1463.25,"end":1649.0,"duration":185.75,"bytes":16383228,"sha256":"d40245ba44ab3928b610ce5291163085c9ad9c341cb757f5ba287d03308d5603"},
+    {"candidate":"C10","start":1649.0,"end":1831.0,"duration":182.0,"bytes":16052478,"sha256":"3c56261b98d891bb248ead4c0a71e499e58f5f93d3faa02fed707147b917aaea"},
+    {"candidate":"C11","start":1831.0,"end":2008.75,"duration":177.75,"bytes":15677628,"sha256":"3c7576bd811a16db8e2ba32b26482a57ef8a07123e87f15739a56943bf308019"},
+    {"candidate":"C12","start":2008.75,"end":2204.27,"duration":195.52,"bytes":17244942,"sha256":"2e298409dd5d029432fd501a68996dd79357fbcd410b1aabc6d25b4e85f93b55"}
+  ],
+  "human_heard": false,
+  "owner_preference_used": false
+}
