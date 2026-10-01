@@ -7,7 +7,8 @@ def f1(a,b):
  sm=difflib.SequenceMatcher(a=a,b=b,autojunk=False); m=sum(i2-i1 for tag,i1,i2,j1,j2 in sm.get_opcodes() if tag=="equal"); r=m/len(a) if a else 0;p=m/len(b) if b else 0;return 2*r*p/(r+p) if r+p else 0
 def pct(v):
  n=len(v);return [((sum(x<q for x in v)+(sum(x==q for x in v)-1)/2)/(n-1)) for q in v]
-out={"task_id":TASK,"state":"STARTED","human_heard":False,"owner_preference_used":False}\nprint("AH_R008_RUNNER_START",flush=True)
+out={"task_id":TASK,"state":"STARTED","human_heard":False,"owner_preference_used":False}
+print("AH_R008_RUNNER_START",flush=True)
 try:
  src="/kaggle/working/source.bin"
  print("AH_R008_SOURCE_DOWNLOAD_START",flush=True)
