@@ -1,0 +1,14 @@
+{
+  "id": "alonehunter/ah-ya-russkiy-stihoplet-apex-pcm12-final2",
+  "title": "AH YA RUSSKIY STIHOPLET APEX PCM12 FINAL2",
+  "code_file": "script.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": [],
+  "model_sources": []
+}
