@@ -27,12 +27,7 @@ def pct(v):
  n=len(v);return [((sum(x<q for x in v)+(sum(x==q for x in v)-1)/2)/(n-1)) for q in v]
 out={"task_id":T,"state":"STARTED","human_heard":False,"owner_preference_used":False}
 try:
- W={}
- for i,(fid,sz,h) in enumerate(P,1):
-  p=f"/kaggle/working/C{i:02d}.wav";urllib.request.urlretrieve(f"https://drive.usercontent.google.com/download?id={fid}&export=download&confirm=t",p)
-  if os.path.getsize(p)!=sz or sha(p)!=h:raise RuntimeError(f"PCM_IDENTITY_FAIL_C{i:02d}")
-  W[i]=p
- out["split_manifest"]={"state":"PASS_EXACT_PCM12","rows":[{"candidate":i,"bytes":os.path.getsize(W[i]),"sha256":sha(W[i])} for i in W]}
+ W={}\n subprocess.check_call([sys.executable,"-m","pip","-q","install","gdown"])\n import gdown\n for i,(fid,sz,h) in enumerate(P,1):\n  p=f"/kaggle/working/C{i:02d}.wav";gdown.download(id=fid,output=p,quiet=False)\n  if os.path.getsize(p)!=sz or sha(p)!=h:raise RuntimeError(f"PCM_IDENTITY_FAIL_C{i:02d}")\n  W[i]=p\n out["split_manifest"]={"state":"PASS_EXACT_PCM12","rows":[{"candidate":i,"bytes":os.path.getsize(W[i]),"sha256":sha(W[i])} for i in W]}
  if os.environ.get("APEX_ENV")!="1":
   subprocess.check_call([sys.executable,"-m","pip","uninstall","-y","torchvision"])
   subprocess.check_call([sys.executable,"-m","pip","-q","install","--force-reinstall","numpy==1.26.4","scipy==1.15.3","soundfile==0.13.1","transformers==4.47.1","stable-ts"])
