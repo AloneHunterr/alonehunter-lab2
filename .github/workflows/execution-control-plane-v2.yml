@@ -1,7 +1,7 @@
 name: execution-control-plane-v2
 on:
   push:
-    branches: [ "bigtech/execution-admission-v2-replay-20261003" ]
+    branches: [ "main", "bigtech/execution-admission-v2-replay-20261003" ]
   pull_request:
     paths:
       - "framepack/kaggle/control_plane_v2.py"
