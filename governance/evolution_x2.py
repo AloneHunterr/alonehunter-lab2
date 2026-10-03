@@ -385,6 +385,16 @@ def reduce_worklist(
             ))
             continue
 
+        if not r.registered:
+            out.append(WorkItem(
+                key, r.role_resource_key, r.audit_id, r.receipt_id, r.source_identity,
+                Lifecycle.UNROUTED_OR_ORPHAN_CANDIDATE, SemanticDecision.NEEDS_EVIDENCE, PROGRAM_ARCHITECT,
+                next_action="register_existing_receipt_on_canonical_surface_then_readback",
+                reasons=("canonical_registration_not_verified",),
+                current_for_role=r.current_for_role,
+            ))
+            continue
+
         if r.superseded_by and r.semantic_hint != SemanticDecision.SUPERSEDED_FALSE_CLAIM.value:
             current_reasons = ("historical_superseded_by:" + r.superseded_by,)
         elif not r.current_for_role:
