@@ -85,7 +85,7 @@ def consume_admission_v2(*,surface:str,operation:str,task_id:str,role:str=ROLE,r
     verified=validate_admission_v2(surface=surface,operation=operation,task_id=task_id,role=role,raw=raw,now=now,clock_skew_seconds=clock_skew_seconds,verifier_key=verifier_key)
     # Immutable logical snapshot: claim and returned token are detached from caller-owned token object.
     snapshot=copy.deepcopy(verified)
-    payload={"admission_id":snapshot["admission_id"],"admission":copy.deepcopy(snapshot["admission"])}
+    payload={"admission_id":snapshot["admission_id"],"admission":copy.deepcopy(snapshot["admission"]),"issuer_mac":snapshot["issuer_mac"]}
     try: result=dict(claim_fn(payload))
     except Exception as exc: raise AdmissionUnknown(f"REPLAY_CLAIM_UNKNOWN:{exc}") from exc
     state=result.get("state")
