@@ -50,5 +50,6 @@ export async function verifyIssuerMac(
   const sig = hexToBytes(String(issuerMacHex || ""));
   if (!sig) return false;
   const key = await hmacKey(secret, ["verify"]);
-  return crypto.subtle.verify("HMAC", key, sig, enc.encode(stable(value)));
+  const sigBuffer = sig.buffer.slice(sig.byteOffset, sig.byteOffset + sig.byteLength) as ArrayBuffer;
+  return crypto.subtle.verify("HMAC", key, sigBuffer, enc.encode(stable(value)));
 }
