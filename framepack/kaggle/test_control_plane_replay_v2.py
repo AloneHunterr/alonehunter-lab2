@@ -12,7 +12,8 @@ def mk(overrides=None):
       "issued_at":"2026-10-03T12:55:00+00:00","expires_at":"2026-10-03T13:10:00+00:00",
       "nonce":"00112233445566778899aabbccddeeff","evidence_digest":"evidence","issuer_id":"TEST_ISSUER"}
     a.update(overrides or {})
-    return {"admission":a,"admission_id":_digest(a)}
+    stable=json.dumps(dict(sorted(a.items())),separators=(",",":"),ensure_ascii=False)
+    return {"admission":a,"admission_id":hashlib.sha256(stable.encode()).hexdigest()}
 
 class Store:
     def __init__(self):
