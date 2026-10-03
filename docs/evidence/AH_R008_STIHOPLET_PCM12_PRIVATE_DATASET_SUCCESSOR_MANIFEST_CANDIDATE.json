@@ -1,0 +1,87 @@
+{
+  "task_id": "AH_YA_RUSSKIY_STIHOPLET_C01_C12_AUDIO_INTELLIGENCE_APEX_20260927",
+  "status": "CANDIDATE_ONLY__NO_PROVIDER_SUBMIT",
+  "dataset": {
+    "owner": "alonehunter",
+    "slug": "ah-r008-stihoplet-pcm12-private-successor",
+    "title": "AH R008 Stihoplet PCM12 Private Successor"
+  },
+  "lineage": {
+    "source_runner_commit": "65f6bc3931a5cbe9b9778e2ebbe334a75b82778c",
+    "change_scope": "INGRESS_ONLY__DRIVE_GDOWN_TO_ATTACHED_PRIVATE_DATASET"
+  },
+  "artifacts": [
+    {
+      "candidate_id": "C01",
+      "filename": "C01.wav",
+      "bytes": 15563286,
+      "sha256": "211656ae423436e1d3bce0cbaae10c3b19684795161fb55378d7e1a441043274"
+    },
+    {
+      "candidate_id": "C02",
+      "filename": "C02.wav",
+      "bytes": 15567378,
+      "sha256": "d7653b221bc0a3b1c71655ba23ec6540fa3d376168a8bfba171f865f2e514b1c"
+    },
+    {
+      "candidate_id": "C03",
+      "filename": "C03.wav",
+      "bytes": 15192528,
+      "sha256": "40155bbe7939511c7ff3aabcde2668ee674884efe226af389d99e13341e300ef"
+    },
+    {
+      "candidate_id": "C04",
+      "filename": "C04.wav",
+      "bytes": 16758078,
+      "sha256": "b2a1a48c84590c4bf0d769b290eb120d8f53289fe9347057aedc29dfc3eb715a"
+    },
+    {
+      "candidate_id": "C05",
+      "filename": "C05.wav",
+      "bytes": 16515528,
+      "sha256": "45e5698c3cd581e2f21a3573f944a940d0605d7fb0f2e4cc276fbf7359a45165"
+    },
+    {
+      "candidate_id": "C06",
+      "filename": "C06.wav",
+      "bytes": 16383228,
+      "sha256": "9bdf6fef1812231d2196fa7f2041c36c222408684f353eb73943ef59a71d8b29"
+    },
+    {
+      "candidate_id": "C07",
+      "filename": "C07.wav",
+      "bytes": 16206828,
+      "sha256": "c4b72807c445596a2007110a29a3712575f92e9754b9185da6d23bcd114099fa"
+    },
+    {
+      "candidate_id": "C08",
+      "filename": "C08.wav",
+      "bytes": 16868328,
+      "sha256": "4280505e6f6151c8ed9a68234ad9b906f30ab1152b5e43b9a06b1cf918e376d9"
+    },
+    {
+      "candidate_id": "C09",
+      "filename": "C09.wav",
+      "bytes": 16383228,
+      "sha256": "d40245ba44ab3928b610ce5291163085c9ad9c341cb757f5ba287d03308d5603"
+    },
+    {
+      "candidate_id": "C10",
+      "filename": "C10.wav",
+      "bytes": 16052478,
+      "sha256": "3c56261b98d891bb248ead4c0a71e499e58f5f93d3faa02fed707147b917aaea"
+    },
+    {
+      "candidate_id": "C11",
+      "filename": "C11.wav",
+      "bytes": 15677628,
+      "sha256": "3c7576bd811a16db8e2ba32b26482a57ef8a07123e87f15739a56943bf308019"
+    },
+    {
+      "candidate_id": "C12",
+      "filename": "C12.wav",
+      "bytes": 17244942,
+      "sha256": "2e298409dd5d029432fd501a68996dd79357fbcd410b1aabc6d25b4e85f93b55"
+    }
+  ]
+}
