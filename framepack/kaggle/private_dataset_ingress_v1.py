@@ -55,8 +55,18 @@ def load_manifest(path: str|Path) -> dict[str,Any]:
             raise IngressError(f"INVALID_SHA256:{fn}")
     return m
 
+def _valid_slug(value: str) -> bool:
+    return bool(re.fullmatch(r"[a-z0-9][a-z0-9-]{1,48}[a-z0-9]", value))
+
 def dataset_ref(m: Mapping[str,Any]) -> str:
-    d=m["dataset"]; return f"{d['owner']}/{d['slug']}"
+    d=m["dataset"]
+    owner=str(d["owner"])
+    slug=str(d["slug"])
+    if not _valid_slug(slug):
+        raise IngressError(f"INVALID_DATASET_SLUG:{slug}")
+    if "/" in owner or owner.startswith("http") or not owner.strip():
+        raise IngressError("INVALID_DATASET_OWNER")
+    return f"{owner}/{slug}"
 
 def verify_artifact_dir(m: Mapping[str,Any], root: str|Path) -> list[dict[str,Any]]:
     root=Path(root); out=[]
@@ -72,21 +82,33 @@ def verify_artifact_dir(m: Mapping[str,Any], root: str|Path) -> list[dict[str,An
 
 def build_dataset_metadata(m: Mapping[str,Any]) -> dict[str,Any]:
     _no_secret_fields(m); d=m["dataset"]
+    title=str(d["title"])
+    if not 6 <= len(title) <= 50:
+        raise IngressError("DATASET_TITLE_LENGTH_INVALID")
     return {
-      "title":d["title"],"id":dataset_ref(m),"licenses":[{"name":"other"}],
+      "title":title,"id":dataset_ref(m),"licenses":[{"name":"other"}],
       "description":f"Private operational input for {m['task_id']}. Exact immutable bytes; not for publication or redistribution.",
       "resources":[{"path":a["filename"],"description":f"{a['candidate_id']} sha256={a['sha256']} bytes={a['bytes']}"} for a in m["artifacts"]]
     }
 
 def build_kernel_metadata(base: Mapping[str,Any], m: Mapping[str,Any]) -> dict[str,Any]:
+    _no_secret_fields(base)
     out=copy.deepcopy(dict(base)); ref=dataset_ref(m)
-    out["dataset_sources"]=list(dict.fromkeys(list(out.get("dataset_sources",[]))+[ref]))
+    existing=[]
+    for source in list(out.get("dataset_sources",[])):
+        s=str(source)
+        if s.startswith("http") or s.count("/") != 1:
+            raise IngressError(f"INVALID_DATASET_SOURCE:{s}")
+        existing.append(s)
+    out["dataset_sources"]=list(dict.fromkeys(existing+[ref]))
     out["is_private"]=True
     out["enable_internet"]=False
     return out
 
 def stage_private_dataset(m: Mapping[str,Any], source_dir: str|Path, stage_dir: str|Path) -> dict[str,Any]:
     source=Path(source_dir); stage=Path(stage_dir); verify_artifact_dir(m,source)
+    if stage.exists() and any(stage.iterdir()):
+        raise IngressError("STAGE_DIR_NOT_EMPTY")
     stage.mkdir(parents=True,exist_ok=True)
     for a in m["artifacts"]:
         src=source/a["filename"]; dst=stage/a["filename"]
