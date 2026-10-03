@@ -1,0 +1,27 @@
+name: evolution-x2-reducer-v1
+
+on:
+  pull_request:
+    paths:
+      - "governance/**"
+      - ".github/workflows/evolution-x2-reducer-v1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  x2-behavioral-harness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Syntax gate
+        run: python -m py_compile governance/evolution_x2.py governance/test_evolution_x2.py
+      - name: X2 E01-E16 and X3 guard
+        run: python -m unittest governance.test_evolution_x2 -v
