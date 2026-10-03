@@ -1,0 +1,18 @@
+name: execution-control-plane-v2
+on:
+  push:
+    branches: [ "bigtech/execution-admission-v2-replay-20261003" ]
+  pull_request:
+    paths:
+      - "framepack/kaggle/control_plane_v2.py"
+      - "framepack/kaggle/test_control_plane_replay_v2.py"
+      - "framepack/kaggle/control_plane_v1.py"
+      - "framepack/kaggle/test_control_plane_binding_v1.py"
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: python -m unittest framepack.kaggle.test_control_plane_replay_v2 framepack.kaggle.test_control_plane_binding_v1
