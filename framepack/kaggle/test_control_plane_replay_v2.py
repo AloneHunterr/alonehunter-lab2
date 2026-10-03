@@ -2,6 +2,7 @@
 import copy,hashlib,hmac,json,threading,unittest
 from datetime import datetime,timezone
 from control_plane_v2 import *
+from control_plane_v2 import _digest, _mac
 
 NOW=datetime(2026,10,3,13,0,0,tzinfo=timezone.utc)
 KEY="0123456789abcdef0123456789abcdef"
