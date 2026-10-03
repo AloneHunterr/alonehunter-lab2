@@ -1,0 +1,22 @@
+name: execution-control-plane-v2
+on:
+  push:
+    branches: [ "main", "bigtech/execution-admission-v2-replay-20261003" ]
+  pull_request:
+    paths:
+      - "framepack/kaggle/control_plane_v2.py"
+      - "framepack/kaggle/test_control_plane_replay_v2.py"
+      - "framepack/kaggle/control_plane_v1.py"
+      - "framepack/kaggle/test_control_plane_binding_v1.py"
+      - "supabase/functions/execution-admission-claim-v2/**"
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: denoland/setup-deno@v2
+        with: { deno-version: "v2.x" }
+      - run: python framepack/kaggle/test_control_plane_replay_v2.py && python framepack/kaggle/test_control_plane_binding_v1.py
+      - run: deno test supabase/functions/execution-admission-claim-v2/crypto_test.ts
