@@ -39,6 +39,14 @@ class V2(unittest.TestCase):
             t["admission"]["task_id"]="MUTATED"
             return {"state":"CLAIMED","admission_id":p["admission_id"],"nonce":p["admission"]["nonce"]}
         out=self.consume(t,claim); seen.append(out["admission"]["task_id"]); self.assertEqual(seen,[TASK])
+    def test_claim_payload_carries_issuer_mac(self):
+        t=mk(); seen={}
+        def claim(p):
+            seen.update(p)
+            return {"state":"CLAIMED","admission_id":p["admission_id"],"nonce":p["admission"]["nonce"]}
+        out=self.consume(t,claim)
+        self.assertEqual(out["replay_receipt"]["state"],"CLAIMED")
+        self.assertEqual(seen["issuer_mac"],t["issuer_mac"])
     def test_crosswired_claim_receipt_unknown(self):
         with self.assertRaisesRegex(AdmissionUnknown,"IDENTITY"): self.consume(mk(),lambda p:{"state":"CLAIMED","admission_id":"wrong","nonce":"wrong"})
     def test_invalid_clock_inputs(self):
