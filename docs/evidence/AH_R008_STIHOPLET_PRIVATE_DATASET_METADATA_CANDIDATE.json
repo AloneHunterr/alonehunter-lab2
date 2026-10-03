@@ -1,0 +1,10 @@
+{
+  "title": "AH R008 Stihoplet PCM12 Private Successor",
+  "id": "alonehunter/ah-r008-stihoplet-pcm12-private-successor",
+  "licenses": [
+    {
+      "name": "other"
+    }
+  ],
+  "description": "Private operational immutable PCM12 input for AH_YA_RUSSKIY_STIHOPLET_C01_C12_AUDIO_INTELLIGENCE_APEX_20260927. Exact bytes/SHA are governed by the candidate manifest. Not for publication or redistribution."
+}
