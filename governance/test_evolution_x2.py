@@ -227,6 +227,27 @@ class X2BehavioralHarness(unittest.TestCase):
         self.assertEqual(x.lifecycle, Lifecycle.NEEDS_EVIDENCE)
 
 
+    def test_unregistered_receipt_with_full_downstream_evidence_is_nonterminal(self):
+        r = receipt(registered=False)
+        h = handoff(r, accepted=True)
+        e = event(r)
+        x = self.one(
+            r,
+            handoffs=[h],
+            events=[e],
+            acks=[ack(r)],
+            recovery_knowledge=[rk(r)],
+            freshness=[fresh(r)],
+        )
+        self.assertEqual(x.lifecycle, Lifecycle.UNROUTED_OR_ORPHAN_CANDIDATE)
+        self.assertNotEqual(x.lifecycle, Lifecycle.TERMINAL_CLOSED)
+        self.assertEqual(
+            x.next_action,
+            "register_existing_receipt_on_canonical_surface_then_readback",
+        )
+        self.assertIn("canonical_registration_not_verified", x.reasons)
+
+
 class X3ConcurrentReadbackGuard(unittest.TestCase):
     def test_pass_exact_same_watermark(self):
         obs = WriteObservation(True, "w1", "w1", "row109220", "abc", "abc", False)
