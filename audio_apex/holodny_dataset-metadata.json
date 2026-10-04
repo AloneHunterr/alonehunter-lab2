@@ -1,0 +1,48 @@
+{
+  "title": "AH Holodny PCM10 Private 20261004",
+  "id": "alonehunter/ah-holodny-pcm10-private-20261004",
+  "licenses": [
+    {
+      "name": "other"
+    }
+  ],
+  "description": "Private operational transport input for AH_HOLODNY_RASCHET_C01_C10_AUDIO_INTELLIGENCE_APEX_20260927. Nine ZIP-wrapped byte parts reconstruct one immutable canonical PCM10 archive. Not for publication or redistribution.",
+  "resources": [
+    {
+      "path": "AH_HOLODNY_PCM10_R1.part00.zip",
+      "description": "transport part 00 sha256=9cea19ef5732400209228545a94a78fb51d6c7edb32a6fa140a0e76ed9d8ba34 bytes=16777366"
+    },
+    {
+      "path": "AH_HOLODNY_PCM10_R1.part01.zip",
+      "description": "transport part 01 sha256=40f4f6d64603be964e5e7f42a9dd15533da1819851981706679d4b951320bf12 bytes=16777366"
+    },
+    {
+      "path": "AH_HOLODNY_PCM10_R1.part02.zip",
+      "description": "transport part 02 sha256=6e8587cfa74735e056885b5a4fb236717702c412577ee88e5fb219c9d083cfae bytes=16777366"
+    },
+    {
+      "path": "AH_HOLODNY_PCM10_R1.part03.zip",
+      "description": "transport part 03 sha256=d33c6a3382cc70c707de45d465681c7fbdc04e3ff4a0f6bf8c06cd48f9b2deec bytes=16777366"
+    },
+    {
+      "path": "AH_HOLODNY_PCM10_R1.part04.zip",
+      "description": "transport part 04 sha256=b43fa68af0168fc187cc26c0744617a2d9f17385914bf325f56e0dc76da24e52 bytes=16777366"
+    },
+    {
+      "path": "AH_HOLODNY_PCM10_R1.part05.zip",
+      "description": "transport part 05 sha256=70443d8d104c913a78b21aedff265a6389ac671aec644717c28f2c4039d8bccb bytes=16777366"
+    },
+    {
+      "path": "AH_HOLODNY_PCM10_R1.part06.zip",
+      "description": "transport part 06 sha256=2a6afa8d5f404f6fb4fbf8b745bbb1c00bc617c212c869201d95bfd53d00a5ae bytes=16777366"
+    },
+    {
+      "path": "AH_HOLODNY_PCM10_R1.part07.zip",
+      "description": "transport part 07 sha256=ace7931abd67b9048a0892654a8d9b7f62e507e77caef5d3ff30dc68ba543c64 bytes=16777366"
+    },
+    {
+      "path": "AH_HOLODNY_PCM10_R1.part08.zip",
+      "description": "transport part 08 sha256=e28cd096568a1cfe6623f1283105b3df001c9aa561c25fa0bf8eef541e955e86 bytes=12245132"
+    }
+  ]
+}
