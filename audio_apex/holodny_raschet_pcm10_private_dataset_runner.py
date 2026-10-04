@@ -1,4 +1,4 @@
-import os,sys,json,subprocess,urllib.request,hashlib,re,difflib,gc,traceback
+import os,sys,json,subprocess,urllib.request,hashlib,re,difflib,gc,traceback,zipfile
 os.environ["USE_TORCH"]="1"
 os.environ["USE_TF"]="0"
 os.environ["USE_FLAX"]="0"
@@ -31,12 +31,49 @@ try:
  W={}
  from pathlib import Path
  root=Path("/kaggle/input")
+ zip_sha=[
+  "9cea19ef5732400209228545a94a78fb51d6c7edb32a6fa140a0e76ed9d8ba34",
+  "40f4f6d64603be964e5e7f42a9dd15533da1819851981706679d4b951320bf12",
+  "6e8587cfa74735e056885b5a4fb236717702c412577ee88e5fb219c9d083cfae",
+  "d33c6a3382cc70c707de45d465681c7fbdc04e3ff4a0f6bf8c06cd48f9b2deec",
+  "b43fa68af0168fc187cc26c0744617a2d9f17385914bf325f56e0dc76da24e52",
+  "70443d8d104c913a78b21aedff265a6389ac671aec644717c28f2c4039d8bccb",
+  "2a6afa8d5f404f6fb4fbf8b745bbb1c00bc617c212c869201d95bfd53d00a5ae",
+  "ace7931abd67b9048a0892654a8d9b7f62e507e77caef5d3ff30dc68ba543c64",
+  "e28cd096568a1cfe6623f1283105b3df001c9aa561c25fa0bf8eef541e955e86"]
+ inner_sha=[
+  "b2739b98793fcbe9fccbe9c3dc558859e7e6e7d54cae1a4da1b096272dcf74e8",
+  "b40a26211f80e523dfc4adcc0b063650f2e907d100e9823c5f9d316f197da93a",
+  "fcf08e0f694092742472cc67e284e4ce03dd2984b0f2a6948f9f1c76fa20f0fd",
+  "418ccc7ac9dd5b3591d511223288eaf284e86f0a19a5f889a9d58a75ea61a386",
+  "e0fba732edf3290c2363ebdbc1db7129c35efbd55b93d4dbd0fa5c731e089e99",
+  "0f641a8c2c215dd5398054c049e8368b40cf655676856c90684380fb1c0b27d2",
+  "dfa9a7eabb60bc62a553a71750fa5eb224bfd3b1499442c5262fe862faf5a8b3",
+  "0d4ea29ff53dbf8c38931f4c2c18d5ac33e2dcde4e00b78cec5b992b4f0288c1",
+  "88883e1b26e47a79ddc8248ca8f2ac02805067b5aac0874907377776e3d075f6"]
+ full=Path("/kaggle/working/AH_HOLODNY_RASCHET_PCM10_R1.zip")
+ with open(full,"wb") as dst:
+  for i in range(9):
+   name=f"AH_HOLODNY_PCM10_R1.part{i:02d}.zip"
+   matches=sorted(root.rglob(name))
+   if len(matches)!=1: raise RuntimeError(f"TRANSPORT_ZIP_IDENTITY_AMBIGUOUS_{i:02d}_COUNT_{len(matches)}")
+   zp=matches[0]
+   if sha(zp)!=zip_sha[i]: raise RuntimeError(f"TRANSPORT_ZIP_SHA_FAIL_{i:02d}")
+   with zipfile.ZipFile(zp) as z:
+    names=z.namelist()
+    if len(names)!=1: raise RuntimeError(f"TRANSPORT_ZIP_MEMBER_COUNT_FAIL_{i:02d}")
+    raw=z.read(names[0])
+   if hashlib.sha256(raw).hexdigest()!=inner_sha[i]: raise RuntimeError(f"TRANSPORT_PART_SHA_FAIL_{i:02d}")
+   dst.write(raw)
+ if sha(full)!="25a24e542a72b0b93555b5152fb86939759cdbb1636a6e97b436107e73c47ba8":
+  raise RuntimeError("TRANSPORT_FULL_ZIP_SHA_FAIL")
+ pcmroot=Path("/kaggle/working/pcm10_exact"); pcmroot.mkdir(parents=True,exist_ok=True)
+ with zipfile.ZipFile(full) as z: z.extractall(pcmroot)
  for i,(name,sz,h) in enumerate(P,1):
-  matches=sorted(root.rglob(name))
-  if len(matches)!=1: raise RuntimeError(f"PCM_DATASET_IDENTITY_AMBIGUOUS_C{i:02d}_COUNT_{len(matches)}")
-  p=str(matches[0])
-  if os.path.getsize(p)!=sz or sha(p)!=h: raise RuntimeError(f"PCM_IDENTITY_FAIL_C{i:02d}")
-  W[i]=p
+  p=pcmroot/name
+  if not p.exists() or os.path.getsize(p)!=sz or sha(p)!=h: raise RuntimeError(f"PCM_IDENTITY_FAIL_C{i:02d}")
+  W[i]=str(p)
+ out["transport_manifest"]={"state":"PASS_EXACT_TRANSPORT_9_OF_9","full_zip_sha256":sha(full)}
  out["split_manifest"]={"state":"PASS_EXACT_PCM10","rows":[{"candidate":i,"bytes":os.path.getsize(W[i]),"sha256":sha(W[i])} for i in W]}
  if os.environ.get("APEX_ENV")!="1":
   subprocess.check_call([sys.executable,"-m","pip","uninstall","-y","torchvision"])
