@@ -1,0 +1,16 @@
+{
+  "id": "alonehunter/ah-holodny-raschet-pcm10-dual-axis-final",
+  "title": "AH Holodny Raschet PCM10 Dual Axis Final",
+  "code_file": "holodny_raschet_pcm10_private_dataset_runner.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "dataset_sources": [
+    "alonehunter/ah-holodny-pcm10-private-20261004"
+  ],
+  "competition_sources": [],
+  "kernel_sources": [],
+  "model_sources": []
+}
