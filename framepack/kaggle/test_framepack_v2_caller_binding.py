@@ -48,7 +48,7 @@ class TrustedClaims:
         return {"state":"CLAIMED","admission_id":aid,"nonce":nonce}
 
 class CallerBinding(unittest.TestCase):
-    def run(self, token, claim, sentinel, *, now=NOW):
+    def invoke(self, token, claim, sentinel, *, now=NOW):
         return rt.run_microproof(raw=raw(token) if token is not None else None,claim_fn=claim,now=now,target_fn=sentinel)
 
     def test_T01_missing_token_zero_target(self):
@@ -56,7 +56,7 @@ class CallerBinding(unittest.TestCase):
         old={k:os.environ.pop(k,None) for k in ("AH_EXECUTION_ADMISSION_TOKEN_KAGGLE","AH_EXECUTION_ADMISSION_TOKEN")}
         try:
             with self.assertRaisesRegex(cp.AdmissionDenied,"TOKEN_REQUIRED"):
-                self.run(None,TrustedClaims().claim,s)
+                self.invoke(None,TrustedClaims().claim,s)
             self.assertEqual(s.count,0)
         finally:
             for k,v in old.items():
@@ -71,21 +71,21 @@ class CallerBinding(unittest.TestCase):
     def test_T03_wrong_task_zero_target(self):
         s=Sentinel()
         with self.assertRaisesRegex(cp.AdmissionDenied,"TASK"):
-            self.run(mk({"task_id":"OTHER_TASK"}),TrustedClaims().claim,s)
+            self.invoke(mk({"task_id":"OTHER_TASK"}),TrustedClaims().claim,s)
         self.assertEqual(s.count,0)
 
     def test_T04_expired_zero_target(self):
         s=Sentinel()
         t=mk({"issued_at":"2026-10-04T12:00:00+00:00","expires_at":"2026-10-04T12:10:00+00:00"})
         with self.assertRaisesRegex(cp.AdmissionDenied,"EXPIRED"):
-            self.run(t,TrustedClaims().claim,s)
+            self.invoke(t,TrustedClaims().claim,s)
         self.assertEqual(s.count,0)
 
     def test_T05_future_zero_target(self):
         s=Sentinel()
         t=mk({"issued_at":"2026-10-04T13:05:00+00:00","expires_at":"2026-10-04T13:10:00+00:00"})
         with self.assertRaisesRegex(cp.AdmissionDenied,"NOT_YET_VALID"):
-            self.run(t,TrustedClaims().claim,s)
+            self.invoke(t,TrustedClaims().claim,s)
         self.assertEqual(s.count,0)
 
     def test_T06_missing_claim_config_unknown_zero_target(self):
@@ -93,7 +93,7 @@ class CallerBinding(unittest.TestCase):
         old={k:os.environ.pop(k,None) for k in ("AH_EXECUTION_ADMISSION_CLAIM_URL","AH_EXECUTION_ADMISSION_CLAIM_KEY")}
         try:
             with self.assertRaises(cp.AdmissionUnknown):
-                self.run(mk(),cp.claim_replay_http,s)
+                self.invoke(mk(),cp.claim_replay_http,s)
             self.assertEqual(s.count,0)
         finally:
             for k,v in old.items():
@@ -102,34 +102,34 @@ class CallerBinding(unittest.TestCase):
     def test_T07_forged_denied_zero_target(self):
         s=Sentinel()
         with self.assertRaisesRegex(cp.AdmissionDenied,"ISSUER_AUTHENTICATION_FAILURE"):
-            self.run(mk(issuer_mac="forged"),TrustedClaims().claim,s)
+            self.invoke(mk(issuer_mac="forged"),TrustedClaims().claim,s)
         self.assertEqual(s.count,0)
 
     def test_T08_crosswired_claim_unknown_zero_target(self):
         s=Sentinel()
         with self.assertRaisesRegex(cp.AdmissionUnknown,"IDENTITY"):
-            self.run(mk(),lambda p:{"state":"CLAIMED","admission_id":"wrong","nonce":"wrong"},s)
+            self.invoke(mk(),lambda p:{"state":"CLAIMED","admission_id":"wrong","nonce":"wrong"},s)
         self.assertEqual(s.count,0)
 
     def test_T09_claim_timeout_unknown_zero_target(self):
         s=Sentinel()
         def timeout(_): raise TimeoutError("simulated")
         with self.assertRaises(cp.AdmissionUnknown):
-            self.run(mk(),timeout,s)
+            self.invoke(mk(),timeout,s)
         self.assertEqual(s.count,0)
 
     def test_T10_valid_claim_target_exactly_once(self):
         s=Sentinel(); claims=TrustedClaims()
-        out=self.run(mk(),claims.claim,s)
+        out=self.invoke(mk(),claims.claim,s)
         self.assertEqual(s.count,1)
         self.assertEqual(out["count"],1)
 
     def test_T11_replay_zero_second_target(self):
         s=Sentinel(); claims=TrustedClaims(); token=mk()
-        self.run(token,claims.claim,s)
+        self.invoke(token,claims.claim,s)
         self.assertEqual(s.count,1)
         with self.assertRaisesRegex(cp.AdmissionDenied,"REPLAY"):
-            self.run(token,claims.claim,s)
+            self.invoke(token,claims.claim,s)
         self.assertEqual(s.count,1)
 
     def test_T14_no_issuer_verifier_secret_capability(self):
