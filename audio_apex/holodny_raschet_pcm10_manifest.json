@@ -1,0 +1,75 @@
+{
+  "task_id": "AH_HOLODNY_RASCHET_C01_C10_AUDIO_INTELLIGENCE_APEX_20260927",
+  "dataset": {
+    "owner": "alonehunter",
+    "slug": "ah-holodny-pcm10-private-20261004",
+    "title": "AH Holodny PCM10 Private 20261004"
+  },
+  "owner_lyrics_authority": {
+    "drive_id": "1buWFtoFw5NBIbs1bnfdOgLCH_py_nOgx",
+    "section": "ХОЛОДНЫЙ РАСЧЁТ",
+    "local_snapshot_sha256": "03b0a9ed0859ebb6f394cc1ecba36b3d13bc0ccbb7a31d697bac592e68f8c1df"
+  },
+  "artifacts": [
+    {
+      "candidate_id": "C01",
+      "filename": "C01.wav",
+      "bytes": 16798086,
+      "sha256": "b177bcd7ccc90ded65b4088c326066e836b37e9abcb23ea62fc8d25deddb8638"
+    },
+    {
+      "candidate_id": "C02",
+      "filename": "C02.wav",
+      "bytes": 16956528,
+      "sha256": "193b45121d8bcf63eb824f5565e17fec3b364756f8b8d7ab7467b454cc04a8c9"
+    },
+    {
+      "candidate_id": "C03",
+      "filename": "C03.wav",
+      "bytes": 16383228,
+      "sha256": "90326e35686ad502fccc56cfa34e05adfe3117de0c745ccff09c403e8b5d6fa5"
+    },
+    {
+      "candidate_id": "C04",
+      "filename": "C04.wav",
+      "bytes": 16052478,
+      "sha256": "c5e594f0013cb340071af0cf508cf4ff3bd95db4f9e7edf06d82c665328629cb"
+    },
+    {
+      "candidate_id": "C05",
+      "filename": "C05.wav",
+      "bytes": 17822034,
+      "sha256": "a04bdeffad975a38cacec2b970543595e3d4ef75776966acf7cd5cbecd060457"
+    },
+    {
+      "candidate_id": "C06",
+      "filename": "C06.wav",
+      "bytes": 16617628,
+      "sha256": "0d23d23e30ff722bb923f67f3fe5895396a122786988b4f5aa754ebdc2416a4c"
+    },
+    {
+      "candidate_id": "C07",
+      "filename": "C07.wav",
+      "bytes": 16395136,
+      "sha256": "d9030072a9a206521675c07ddb79fde566a030a4143d1b1e32e2a0eb08d7c0e1"
+    },
+    {
+      "candidate_id": "C08",
+      "filename": "C08.wav",
+      "bytes": 16732500,
+      "sha256": "07f1273f96bdf991c7774375bbe8a83e720e69640e3b43c23341fdc054ea96b3"
+    },
+    {
+      "candidate_id": "C09",
+      "filename": "C09.wav",
+      "bytes": 16801914,
+      "sha256": "f7cf2923b622b5f6e4645c905553b32cc3f4fd984ac2df887f069976cf135fd0"
+    },
+    {
+      "candidate_id": "C10",
+      "filename": "C10.wav",
+      "bytes": 12035320,
+      "sha256": "9586fe534e830d5244d676e8102a0cf21868cf3628bc23937522b5ce92abdd7e"
+    }
+  ]
+}
