@@ -46,7 +46,7 @@ try:
  with open(full,"wb") as dst:
   for i in range(9):
    name=f"AH_HOLODNY_PCM10_R1.part{i:02d}"
-   matches=sorted(root.rglob(name))
+   matches=sorted(p for p in root.rglob(name) if p.is_file())
    if len(matches)!=1: raise RuntimeError(f"TRANSPORT_PART_IDENTITY_AMBIGUOUS_{i:02d}_COUNT_{len(matches)}")
    rp=matches[0]
    if os.path.getsize(rp)!=part_sizes[i] or sha(rp)!=inner_sha[i]: raise RuntimeError(f"TRANSPORT_PART_IDENTITY_FAIL_{i:02d}")
