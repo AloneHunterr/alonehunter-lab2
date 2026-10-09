@@ -1,0 +1,24 @@
+name: ah-spartak-isolated-smoke-v1
+on:
+  push:
+    branches: [ci-spartak-smoke-20261009]
+    paths: [.github/workflows/ah-spartak-isolated-smoke-v1.yml]
+permissions: {}
+concurrency:
+  group: ah-spartak-lab2-smoke
+  cancel-in-progress: false
+jobs:
+  isolated-smoke:
+    name: isolated-spartak-smoke
+    runs-on: [ah-lab2-sandbox-v1]
+    timeout-minutes: 7
+    steps:
+      - name: Verify Linux isolation
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -s)" = Linux
+          test "$(id -u)" -ne 0
+          test "$(id -un)" = ciops
+          if mount | grep -Eq '/mnt/[c-z](/| |$)'; then exit 11; fi
+          echo AH_LAB2_ISOLATED_RUNNER_SMOKE_PASS
