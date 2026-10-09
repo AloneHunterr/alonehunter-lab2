@@ -1,0 +1,17 @@
+name: APEX A1-A2 deterministic eval
+on:
+  push:
+    branches: [apex-stabilization-a1-a3-20260927, bigtech-e104-e109-stabilization-20260929]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - run: python -m unittest -v tests/test_audio_apex_runner.py tests/test_real_media_boundary_extractor.py tests/test_multimodal_boundary_verifier.py tests/test_e104_e109_stabilization.py
